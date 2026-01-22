@@ -77,7 +77,8 @@ class WeiboHotSearchAnalyzer:
 
         try:
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Referer": "https://s.weibo.com/"
             }
             response = requests.get(self.api_url, headers=headers, timeout=15)
             response.raise_for_status()
@@ -88,8 +89,12 @@ class WeiboHotSearchAnalyzer:
             # 几种常见的API格式适配
             items = []
             if isinstance(data, dict):
-                if 'data' in data and isinstance(data['data'], list):
-                    items = data['data']
+                if 'data' in data:
+                    if isinstance(data['data'], list):
+                        items = data['data']
+                    # 适配微博官方接口 data.data.realtime 或 data.realtime
+                    elif isinstance(data['data'], dict) and 'realtime' in data['data']:
+                        items = data['data']['realtime']
                 elif 'result' in data and isinstance(data['result'], dict) and 'list' in data['result']:
                     items = data['result']['list']
                 elif 'list' in data and isinstance(data['list'], list):
@@ -97,11 +102,14 @@ class WeiboHotSearchAnalyzer:
             elif isinstance(data, list):
                 items = data
 
+            if not items:
+                print(f"⚠️ 未能从API响应中解析出列表数据。原始响应开头: {str(data)[:500]}")
+
             for i, item in enumerate(items, 1):
                 # 统一字段提取
-                title = item.get('title') or item.get('hotword') or item.get('word') or ''
+                title = item.get('title') or item.get('hotword') or item.get('word') or item.get('note') or ''
                 heat = item.get('heat') or item.get('hotwordnum') or item.get('num') or '0'
-                tag = item.get('tag') or item.get('hottag') or item.get('label_name') or ''
+                tag = item.get('tag') or item.get('hottag') or item.get('label_name') or item.get('flag') or ''
                 
                 if title:
                     self.hot_topics.append({
@@ -113,6 +121,11 @@ class WeiboHotSearchAnalyzer:
 
             # 只取前20条，避免API消耗过大
             self.hot_topics = self.hot_topics[:15]
+            
+            if not self.hot_topics:
+                 print("❌ 解析后未发现有效话题")
+                 raise ValueError("API响应解析失败，未找到有效话题")
+
             print(f"✅ 成功获取 {len(self.hot_topics)} 个热搜话题")
             return self.hot_topics
 
