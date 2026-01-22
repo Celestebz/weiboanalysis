@@ -289,30 +289,32 @@ class WeiboHotSearchAnalyzer:
             content_html += f"""
             <div class="hot-topic {topic_class}">
                 <div class="topic-header">
-                    <h2 class="topic-title">#{rank}. {title}</h2>
-                    <div class="topic-info">
-                        <span class="info-badge rank">排名: #{rank}</span>
-                        <span class="info-badge heat">热度: {heat}</span>
+                    <div class="topic-title">
+                        <span class="rank-badge">{rank}</span>
+                        {title}
+                        <span class="heat-badge">🔥 {heat}</span>
                     </div>
                 </div>
 
-                <div class="section">
-                    <h3 class="section-title">📌 事件背景</h3>
-                    <div class="event-timeline">
-                        {background_html}
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                {background_html}
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="section">
-                    <h3 class="section-title">💡 产品创意</h3>
-                    <div class="product-ideas">
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
             """
 
             for idea in product_ideas:
                 score = idea.get("total_score", 0)
-                score_class = "excellent" if score >= 80 else "good" if score >= 60 else "normal"
-                score_label = "⭐优秀" if score >= 80 else "良好" if score >= 60 else "普通"
-
+                score_class = "excellent" if score >= 80 else "good"
+                
                 interesting = idea.get("interesting_score", 0)
                 usefulness = idea.get("usefulness_score", 0)
                 name = idea.get("name", "未命名产品")
@@ -323,41 +325,41 @@ class WeiboHotSearchAnalyzer:
                 features_html = "".join([f"<li>{f}</li>" for f in features])
 
                 content_html += f"""
-                        <div class="product-card">
-                            <div class="score-badge {score_class}">
-                                综合评分: {score}分 {score_label}
-                            </div>
-                            <h3 class="product-name">{name}</h3>
-
-                            <div class="product-section">
-                                <h4 class="product-section-title">核心功能</h4>
-                                <ul>{features_html}</ul>
-                            </div>
-
-                            <div class="product-section">
-                                <h4 class="product-section-title">目标用户</h4>
-                                <p>{target}</p>
-                            </div>
-
-                            <div class="product-section">
-                                <h4 class="product-section-title">产品形态</h4>
-                                <span class="product-type">{ptype}</span>
-                            </div>
-
-                            <div class="score-detail">
-                                <div class="score-item">
-                                    <div class="score-label">有趣(80)</div>
-                                    <div class="score-value">{interesting}</div>
+                            <div class="product-card">
+                                <div class="score-ribbon {score_class}">
+                                    {score}分
                                 </div>
-                                <div class="score-item">
-                                    <div class="score-label">有用(20)</div>
-                                    <div class="score-value">{usefulness}</div>
+                                <div class="product-header">
+                                    <h3>{name}</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list">{features_html}</ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">{target}</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">{ptype}</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">{interesting}/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">{usefulness}/20</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                 """
 
             content_html += """
+                        </div>
                     </div>
                 </div>
             </div>
