@@ -175,10 +175,6 @@ class WeiboHotSearchAnalyzer:
     def analyze_product_ideas(self, topic: Dict[str, Any], background: str) -> Dict[str, Any]:
         """分析产品创意"""
         topic_title = topic.get('title', '未知话题')
-        
-        # 这里的逻辑是：如果没有搜索到背景信息，就让 AI 根据标题去推测背景。
-        # AI 模型（如 Claude 3 Opus）通常有很强的世界知识，对于热点常常能"猜"对或者已经知道。
-        is_missing_background = "未找到相关背景信息" in background or "无法获取" in background or not background.strip()
 
         prompt = f"""
         作为一个资深产品经理，请分析微博热搜话题 "{topic_title}"。
@@ -186,13 +182,10 @@ class WeiboHotSearchAnalyzer:
         背景信息：
         {background}
         
-        任务：
-        1. 如果上述背景信息缺失，请根据你的知识库推测该话题可能的事件背景（100字左右）。
-        2. 基于该话题，构思一个"有趣度（80分）+有用度（20分）"的数字产品创意。
+        请基于"有趣度（80分）+有用度（20分）"的评分体系，构思一个相关的数字产品创意（App、小程序、H5或功能模块）。
         
         请严格按照以下 JSON 格式返回结果（不要包含 markdown 代码块标记，只返回纯 JSON）：
         {{
-            "event_context": "事件背景简述（如果背景缺失，请在此补充你推测的背景；如果背景已有，请总结核心点）",
             "name": "产品名称",
             "core_features": ["功能1", "功能2", "功能3", "功能4", "功能5"],
             "target_users": "目标用户群体描述",
@@ -222,9 +215,9 @@ class WeiboHotSearchAnalyzer:
                 idea_data = json.loads(cleaned_content)
             except json.JSONDecodeError as e:
                 print(f"   ⚠️ JSON解析失败: {e}")
-                print(f"   ⚠️ 原始返回内容: {content[:200]}...")
+                print(f"   ⚠️ 原始返回内容: {content[:200]}...") # 打印前200字符用于调试
                 
-                # 尝试正则提取
+                # 尝试更激进的提取 (提取第一个 { 和最后一个 } 之间的内容)
                 try:
                     import re
                     match = re.search(r'\{.*\}', cleaned_content, re.DOTALL)
@@ -233,35 +226,28 @@ class WeiboHotSearchAnalyzer:
                     else:
                         raise ValueError("无法提取有效JSON")
                 except Exception:
-                    print("   ⚠️ 启用兜底数据")
+                    # 最终兜底方案：返回一个占位结果，保证程序不崩
+                    print("   ⚠️ 启用兜底数据，跳过此话题分析错误")
                     idea_data = {
-                        "event_context": "AI无法解析该事件背景",
                         "name": f"基于{topic_title}的创意(AI生成失败)",
-                        "core_features": ["暂时无法生成功能列表"],
+                        "core_features": ["暂时无法生成功能列表", "请稍后重试"],
                         "target_users": "未知",
                         "product_type": "未知",
                         "interesting_score": 0,
                         "usefulness_score": 0,
                         "total_score": 0,
-                        "rationale": "解析失败"
+                        "rationale": "AI响应格式错误，解析失败"
                     }
-
-            # 关键步骤：如果原始搜索背景缺失，使用 AI 生成/总结的背景
-            final_background = background
-            if is_missing_background and idea_data.get("event_context"):
-                final_background = f"🤖 [AI推测背景] {idea_data.get('event_context')}"
-            # 即使原始背景存在，也优先展示 AI 整理过的精简背景，体验更好
-            elif idea_data.get("event_context"):
-                final_background = idea_data.get("event_context")
 
             return {
                 "topic": topic,
-                "background": final_background,
+                "background": background,
                 "product_ideas": [idea_data]
             }
 
         except Exception as e:
             print(f"   ❌ AI分析失败: {e}")
+            # 不再抛出异常阻断流程，而是返回空数据
             return {
                 "topic": topic,
                 "background": background,
