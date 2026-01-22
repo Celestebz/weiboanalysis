@@ -49,7 +49,7 @@ class WeiboHotSearchAnalyzer:
         self.api_url = api_url or os.environ.get("WEIBO_API_URL")
         self.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
         # 支持自定义 Base URL，默认为云雾 AI
-        self.anthropic_base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://yunwu.ai/v1")
+        self.anthropic_base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://yunwu.ai")
         
         self.hot_topics = []
         self.analysis_results = []
