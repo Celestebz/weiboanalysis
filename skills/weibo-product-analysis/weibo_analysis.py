@@ -143,16 +143,27 @@ class WeiboHotSearchAnalyzer:
             
         try:
             with DDGS() as ddgs:
-                results = list(ddgs.text(f"{topic_title} 事件详情", max_results=3))
+                # 尝试策略 1: 加上"事件详情"后缀
+                query1 = f"{topic_title} 事件详情"
+                results = list(ddgs.text(query1, max_results=3))
+                
+                # 尝试策略 2: 如果没结果，尝试仅搜索标题
+                if not results:
+                    print(f"   ⚠️ 策略1无结果，尝试纯标题搜索: {topic_title}")
+                    results = list(ddgs.text(topic_title, max_results=3))
+                
                 if results:
+                    print(f"   ✅ 找到 {len(results)} 条相关信息")
                     summary = "\n".join([f"- {r['title']}: {r['body']}" for r in results])
                     return summary
+                else:
+                    print(f"   ❌ 所有搜索策略均未找到结果 (可能是 GitHub Actions IP 被限制)")
+                    
         except Exception as e:
             print(f"   ⚠️ 搜索失败: {e}")
-            # 搜索失败不视为致命错误，可以继续分析，但需要记录
-            return f"暂时无法获取网络背景信息，分析将仅基于标题进行。"
+            return f"暂时无法获取网络背景信息 ({str(e)})，分析将仅基于标题进行。"
         
-        return "未找到相关背景信息。"
+        return "未找到相关背景信息 (网络搜索返回空)。"
 
     def analyze_product_ideas(self, topic: Dict[str, Any], background: str) -> Dict[str, Any]:
         """分析产品创意"""
