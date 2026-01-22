@@ -143,15 +143,22 @@ class WeiboHotSearchAnalyzer:
             
         try:
             with DDGS() as ddgs:
+                results = []
                 # 尝试策略 1: 加上"事件详情"后缀
-                query1 = f"{topic_title} 事件详情"
-                results = list(ddgs.text(query1, max_results=3))
-                
-                # 尝试策略 2: 如果没结果，尝试仅搜索标题
+                try:
+                    query1 = f"{topic_title} 事件详情"
+                    results = list(ddgs.text(query1, max_results=3))
+                except Exception as e:
+                    print(f"   ⚠️ 策略1搜索出错 ({str(e)}), 尝试降级...")
+
+                # 尝试策略 2: 如果没结果或出错，尝试仅搜索标题
                 if not results:
-                    print(f"   ⚠️ 策略1无结果，尝试纯标题搜索: {topic_title}")
-                    results = list(ddgs.text(topic_title, max_results=3))
-                
+                    print(f"   ⚠️ 尝试纯标题搜索: {topic_title}")
+                    try:
+                        results = list(ddgs.text(topic_title, max_results=3))
+                    except Exception as e:
+                         print(f"   ⚠️ 策略2搜索出错: {str(e)}")
+
                 if results:
                     print(f"   ✅ 找到 {len(results)} 条相关信息")
                     summary = "\n".join([f"- {r['title']}: {r['body']}" for r in results])
@@ -160,7 +167,7 @@ class WeiboHotSearchAnalyzer:
                     print(f"   ❌ 所有搜索策略均未找到结果 (可能是 GitHub Actions IP 被限制)")
                     
         except Exception as e:
-            print(f"   ⚠️ 搜索失败: {e}")
+            print(f"   ⚠️ 搜索服务初始化失败: {e}")
             return f"暂时无法获取网络背景信息 ({str(e)})，分析将仅基于标题进行。"
         
         return "未找到相关背景信息 (网络搜索返回空)。"
@@ -439,7 +446,7 @@ class WeiboHotSearchAnalyzer:
             print(f"   ✓ 背景信息获取完成")
             
             # 延时避免API速率限制
-            time.sleep(1) 
+            time.sleep(2) 
 
             result = self.analyze_product_ideas(topic, background)
             self.analysis_results.append(result)
