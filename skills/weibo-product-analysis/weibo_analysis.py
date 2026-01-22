@@ -50,6 +50,8 @@ class WeiboHotSearchAnalyzer:
         self.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
         # 支持自定义 Base URL，默认为云雾 AI
         self.anthropic_base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://yunwu.ai")
+        # 百度搜索配置
+        self.baidu_api_key = os.environ.get("BAIDU_API_KEY")
         
         self.hot_topics = []
         self.analysis_results = []
@@ -66,6 +68,8 @@ class WeiboHotSearchAnalyzer:
             base_url=self.anthropic_base_url
         )
         print(f"✅ Anthropic API 客户端已初始化 (Base URL: {self.anthropic_base_url})")
+        if self.baidu_api_key:
+            print("✅ 百度智能搜索 API 已配置")
 
     def fetch_weibo_hot_search(self) -> List[Dict[str, Any]]:
         """获取微博热搜榜单"""
@@ -103,40 +107,85 @@ class WeiboHotSearchAnalyzer:
                 items = data
 
             if not items:
-                print(f"⚠️ 未能从API响应中解析出列表数据。原始响应开头: {str(data)[:500]}")
+                print(f"⚠️ 未能解析出热搜列表，原始响应: {str(data)[:200]}")
+                return []
 
-            for i, item in enumerate(items, 1):
-                # 统一字段提取
-                title = item.get('title') or item.get('hotword') or item.get('word') or item.get('note') or ''
-                heat = item.get('heat') or item.get('hotwordnum') or item.get('num') or '0'
-                tag = item.get('tag') or item.get('hottag') or item.get('label_name') or item.get('flag') or ''
+            for i, item in enumerate(items[:15]): # 取前15个
+                # 适配字段
+                title = item.get('word') or item.get('keyword') or item.get('title')
+                heat = item.get('num') or item.get('hot_word_num') or item.get('heat') or 'N/A'
+                rank = i + 1
                 
                 if title:
                     self.hot_topics.append({
-                        'rank': i,
-                        'title': title.strip(),
-                        'heat': str(heat).strip(),
-                        'tag': tag.strip()
+                        "rank": rank,
+                        "title": title,
+                        "heat": heat
                     })
-
-            # 只取前20条，避免API消耗过大
-            self.hot_topics = self.hot_topics[:15]
             
-            if not self.hot_topics:
-                 print("❌ 解析后未发现有效话题")
-                 raise ValueError("API响应解析失败，未找到有效话题")
-
             print(f"✅ 成功获取 {len(self.hot_topics)} 个热搜话题")
             return self.hot_topics
 
         except Exception as e:
-            print(f"❌ 获取热搜数据失败: {e}")
-            raise  # 重新抛出异常，停止执行
+            print(f"❌ 获取热搜失败: {e}")
+            raise
+
+    def search_topic_background_baidu(self, topic_title: str, api_key: str) -> str:
+        """使用百度智能搜索API获取背景"""
+        url = "https://qianfan.baidubce.com/v2/ai_search/web_search"
+        headers = {
+            "X-Appbuilder-Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "messages": [
+                {
+                    "content": f"详细搜索：{topic_title}，简述事件背景、来龙去脉",
+                    "role": "user"
+                }
+            ]
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response.raise_for_status()
+            result_json = response.json()
+            
+            # 优先使用 AI 生成的总结，如果没有则拼接 reference
+            summary = ""
+            if "choices" in result_json and len(result_json["choices"]) > 0:
+                summary = result_json["choices"][0]["message"]["content"]
+            
+            # 如果 AI 总结很短，补充引用内容
+            if len(summary) < 50 and "references" in result_json:
+                refs = result_json["references"]
+                ref_texts = [f"- {r.get('title')}: {r.get('content')[:100]}..." for r in refs[:3]]
+                summary += "\n\n参考信息:\n" + "\n".join(ref_texts)
+                
+            if summary:
+                print(f"   ✅ [Baidu] 成功获取背景 ({len(summary)} 字符)")
+                return summary
+            else:
+                print("   ⚠️ [Baidu] 返回结果为空")
+                return ""
+                
+        except Exception as e:
+            print(f"   ⚠️ [Baidu] 搜索出错: {e}")
+            return ""
 
     def search_topic_background(self, topic_title: str) -> str:
-        """搜索话题背景信息"""
+        """搜索话题背景信息 (优先百度，降级为 DuckDuckGo)"""
         print(f"   Searching background for: {topic_title}...")
         
+        # 1. 优先尝试百度搜索 API (如果配置了KEY)
+        if self.baidu_api_key:
+            res = self.search_topic_background_baidu(topic_title, self.baidu_api_key)
+            if res:
+                return res
+            else:
+                print("   ⚠️ 百度搜索失败，尝试切换到备用搜索...")
+
+        # 2. 备用: DuckDuckGo 搜索
         if not HAS_DDGS:
             print(f"   ⚠️ 警告: 缺少 duckduckgo-search 库，跳过背景搜索")
             return "无法获取背景信息(缺少依赖)"
@@ -160,7 +209,7 @@ class WeiboHotSearchAnalyzer:
                          print(f"   ⚠️ 策略2搜索出错: {str(e)}")
 
                 if results:
-                    print(f"   ✅ 找到 {len(results)} 条相关信息")
+                    print(f"   ✅ [DDGS] 找到 {len(results)} 条相关信息")
                     summary = "\n".join([f"- {r['title']}: {r['body']}" for r in results])
                     return summary
                 else:
