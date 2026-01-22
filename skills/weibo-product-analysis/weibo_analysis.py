@@ -208,11 +208,37 @@ class WeiboHotSearchAnalyzer:
             )
             
             content = message.content[0].text
-            # 清理可能的 Markdown 标记
-            content = content.replace('```json', '').replace('```', '').strip()
+            # 初步清理Markdown标记
+            cleaned_content = content.replace('```json', '').replace('```', '').strip()
             
-            idea_data = json.loads(content)
-            
+            try:
+                idea_data = json.loads(cleaned_content)
+            except json.JSONDecodeError as e:
+                print(f"   ⚠️ JSON解析失败: {e}")
+                print(f"   ⚠️ 原始返回内容: {content[:200]}...") # 打印前200字符用于调试
+                
+                # 尝试更激进的提取 (提取第一个 { 和最后一个 } 之间的内容)
+                try:
+                    import re
+                    match = re.search(r'\{.*\}', cleaned_content, re.DOTALL)
+                    if match:
+                        idea_data = json.loads(match.group(0))
+                    else:
+                        raise ValueError("无法提取有效JSON")
+                except Exception:
+                    # 最终兜底方案：返回一个占位结果，保证程序不崩
+                    print("   ⚠️ 启用兜底数据，跳过此话题分析错误")
+                    idea_data = {
+                        "name": f"基于{topic_title}的创意(AI生成失败)",
+                        "core_features": ["暂时无法生成功能列表", "请稍后重试"],
+                        "target_users": "未知",
+                        "product_type": "未知",
+                        "interesting_score": 0,
+                        "usefulness_score": 0,
+                        "total_score": 0,
+                        "rationale": "AI响应格式错误，解析失败"
+                    }
+
             return {
                 "topic": topic,
                 "background": background,
@@ -221,7 +247,18 @@ class WeiboHotSearchAnalyzer:
 
         except Exception as e:
             print(f"   ❌ AI分析失败: {e}")
-            raise RuntimeError(f"分析话题 '{topic_title}' 失败，请检查 API 调用或网络连接") from e
+            # 不再抛出异常阻断流程，而是返回空数据
+            return {
+                "topic": topic,
+                "background": background,
+                "product_ideas": [{
+                    "name": "分析出错",
+                    "core_features": [],
+                    "total_score": 0,
+                    "target_users": "无",
+                    "product_type": "无"
+                }]
+            }
 
     def calculate_statistics(self, results: List[Dict]) -> Dict[str, Any]:
         """计算统计数据"""
