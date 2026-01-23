@@ -229,18 +229,19 @@ class WeiboHotSearchAnalyzer:
         topic_title = topic.get('title', '未知话题')
 
         prompt = f"""
-        作为一个资深产品经理，请分析微博热搜话题 "{topic_title}"。
-        
-        原始搜索背景：
-        {background}
-        
+        task_prompt = """
         任务：
         1. 首先，请基于上述原始背景信息，整理一段通顺、简洁的事件背景总结（约100字），去除无关信息。
         2. 基于该话题，构思一个"有趣度（80分）+有用度（20分）"的数字产品创意。
         
-        请严格按照以下 JSON 格式返回结果（不要包含 markdown 代码块标记，只返回纯 JSON）：
-        {{
-            "event_summary": "经过整理润色的事件背景简述（约100字）",
+        【重要格式要求】：
+        - 返回必须是纯 JSON 格式。
+        - 字符串内部**严禁**使用英文双引号（"），这会导致 JSON 解析失败。
+        - 凡是需要引用或强调的地方，**请务必使用中文引号（“”）**。
+        
+        请严格按照以下 JSON 格式返回结果（不要包含 markdown 代码块标记）：
+        {
+            "event_summary": "经过整理润色的事件背景简述（约100字，请使用中文引号）",
             "name": "产品名称",
             "core_features": ["功能1", "功能2", "功能3", "功能4", "功能5"],
             "target_users": "目标用户群体描述",
@@ -249,7 +250,16 @@ class WeiboHotSearchAnalyzer:
             "usefulness_score": 15,   // 0-20分
             "total_score": 90,        // 两者之和
             "rationale": "简短的评分理由"
-        }}
+        }
+        """
+        
+        prompt = f"""
+        作为一个资深产品经理，请分析微博热搜话题 "{topic_title}"。
+        
+        原始搜索背景：
+        {background}
+        
+        {task_prompt}
         """
 
         try:
