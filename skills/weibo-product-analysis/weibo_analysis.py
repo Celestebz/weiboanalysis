@@ -231,13 +231,16 @@ class WeiboHotSearchAnalyzer:
         prompt = f"""
         作为一个资深产品经理，请分析微博热搜话题 "{topic_title}"。
         
-        背景信息：
+        原始搜索背景：
         {background}
         
-        请基于"有趣度（80分）+有用度（20分）"的评分体系，构思一个相关的数字产品创意（App、小程序、H5或功能模块）。
+        任务：
+        1. 首先，请基于上述原始背景信息，整理一段通顺、简洁的事件背景总结（约100字），去除无关信息。
+        2. 基于该话题，构思一个"有趣度（80分）+有用度（20分）"的数字产品创意。
         
         请严格按照以下 JSON 格式返回结果（不要包含 markdown 代码块标记，只返回纯 JSON）：
         {{
+            "event_summary": "经过整理润色的事件背景简述（约100字）",
             "name": "产品名称",
             "core_features": ["功能1", "功能2", "功能3", "功能4", "功能5"],
             "target_users": "目标用户群体描述",
@@ -281,6 +284,7 @@ class WeiboHotSearchAnalyzer:
                     # 最终兜底方案：返回一个占位结果，保证程序不崩
                     print("   ⚠️ 启用兜底数据，跳过此话题分析错误")
                     idea_data = {
+                        "event_summary": background, # 解析失败时使用原始背景
                         "name": f"基于{topic_title}的创意(AI生成失败)",
                         "core_features": ["暂时无法生成功能列表", "请稍后重试"],
                         "target_users": "未知",
@@ -291,9 +295,14 @@ class WeiboHotSearchAnalyzer:
                         "rationale": "AI响应格式错误，解析失败"
                     }
 
+            # 优先使用 AI 整理后的背景
+            final_background = idea_data.get("event_summary", background)
+            if not final_background:
+                 final_background = background
+
             return {
                 "topic": topic,
-                "background": background,
+                "background": final_background,
                 "product_ideas": [idea_data]
             }
 

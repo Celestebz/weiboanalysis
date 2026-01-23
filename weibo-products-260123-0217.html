@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-01-23 02:17:35</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">87.6</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        中国飞船预售票一张300万
+                        <span class="heat-badge">🔥  1105651</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 演员黄景瑜将上太空,预售船票300万/张:  1月22日,@interstellOr穿越者官宣演员黄景瑜成为009号太空游客,黄景瑜在vcr中表示很荣幸成为一名太空旅客,将乘坐中国人自己的飞船亲身抵达那片星海。 1月22日,新京报贝壳财经记者获...<br>- 300万元一张票!演员黄景瑜将上太空:很荣幸坐自家飞船:  1月22日,中国商业航天领域迎来突破性进展。北京穿越者载人航天科技有限公司(简称“穿越者”)宣布,其自主研发的可重复使用载人飞船关键技术验证取得重大成功,并已正式启动太空旅游预订。 截至目前,公司已...<br>- 300万一张的太空船票:当星际旅行成为阶层新门票:  北京穿越者载人航天公司的一纸预售公告,将“太空船票”推上热搜。300万一张的价格,预付30万即可锁定名额,十余位来自商界、网红界等领域的签约者名单,让这场商业航天游戏瞬间暴露出残酷的社会隐喻:当普通...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>太空梦想舱</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>虚拟太空旅行体验：用VR/AR技术模拟300万船票的太空之旅全程，从发射到失重到俯瞰地球</li><li>太空存钱罐：设定300万目标，每日打卡存钱，计算你需要多少年才能攒够船票钱</li><li>太空游客社交圈：模拟申请成为虚拟太空游客，完成任务解锁专属身份勋章和太空舱位</li><li>地球明信片：选择太空视角拍摄家乡照片，生成'从太空看我家'的创意海报分享</li><li>太空众筹许愿墙：用户写下太空梦想，点赞最高者有机会获得品牌赞助的真实太空体验名额</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁对航天科技感兴趣、有探索欲望但消费能力有限的年轻群体，以及喜欢尝鲜打卡、热衷社交分享的Z世代用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        大疆pocket4发布时间
+                        <span class="heat-badge">🔥  779929</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 大疆Pocket 4发布日期终有眉目?官方动态+行业爆料全梳理:  首先要明确的是,此前网络上流传的“2025年12月18日发布”属于不实信息。这一说法主要来自部分短视频平台的非权威爆料,既没有官方背书,也不符合大疆产品迭代的常规节奏。从历史规律来看,Pocket系...<br>- 大疆pocket4发布时间!:  根据供应链库存实锤和多方爆料,大疆 Pocket 4 的发布时间已明确锁定在 2026 年 2 月下旬至 3 月(第一季度末),其中标准版将率先上市,而 Pro 版双摄版本或因技术调试延至 5-6 ...<br>- 大疆Pocket 4 --双镜头--12月12日发布:  发布时间:2025年12月12日...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>等等党雷达</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>科技新品发布日历订阅，支持大疆/苹果/索尼等品牌一键追踪</li><li>谣言粉碎机：AI自动识别不实发布日期，标注信息可信度评分</li><li>等等党社区：用户晒'忍住没买旧款'的战绩，计算省下多少钱</li><li>新品倒计时+降价预测曲线，告诉你现在买还是再等等</li><li>爆料情报站：聚合供应链、博主爆料，用投票机制筛选靠谱信息</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">数码产品爱好者、理性消费的等等党、关注科技新品但苦于信息混乱的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        2025年我国农业现代化水平持续提升
+                        <span class="heat-badge">🔥  628290</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 提升农业综合生产能力和质量效益(学习贯彻党的二十届四中全会精神) :  一、提升农业综合生产能力和质量效益是农业强国建设的重大任务 “十四五”时期,在以习近平同志为核心的党中央坚强领导下,我国农业现代化建设取得一系列重大成就。粮食综合生产能力迈上新台阶,2024年粮食产...<br>- 加快农业农村现代化 :  一、充分认识加快农业农村现代化的重大意义 党的十八大以来,在以习近平同志为核心的党中央坚强领导下,“三农”发展取得历史性新成就,农村面貌发生翻天覆地新变化。农业生产基础持续夯实。粮食综合生产能力保持...<br>- 农业农村现代化关系中国式现代化全局和成色:  1.实现农业农村现代化是全面建设社会主义现代化国家的重大任务,关系中国式现代化全局 从中华民族伟大复兴战略全局看,民族要复兴,乡村必振兴,农业强国是社会主义现代化强国的根基。新中国成立以来,中国共产...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>我的开心农场2025</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>虚拟农场经营：用户可种植真实农作物，体验从播种到收获全过程</li><li>AR农机体验：扫描识别现代农业机械，操控无人机、智能收割机等进行虚拟作业</li><li>农业知识闯关：趣味答题解锁新种子、新技术，了解现代农业黑科技</li><li>真实农产品兑换：游戏积分可兑换合作农场的真实有机农产品</li><li>农业碳足迹计算：展示现代农业如何减排增效，生成个人环保贡献报告</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-45岁城市白领及学生群体，对田园生活有向往、关注食品安全和可持续发展的都市人群</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        林更新更新座驾腾势N8L
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 【文章】林更新正式成为腾势N8L的“美好出行品牌大使”了! _车家号_汽车之家:  这事儿发生在2026年1月20日,腾势汽车官方宣布的,他还从D9的车主升级成了N8L的代言人呢。腾势汽车选择代言人一向看重气质与品牌内核的契合,林更新多年来塑造的沉稳、可靠形象,与腾势“科技、安全、...<br>- 林更新代言能拯救腾势销量吗?腾势N8L请了林更新代言,腾势的广告费应该是比亚迪里面最高的了吧:  首先咱得承认,腾势在“请人”这件事上,思路是对的,但市场不买单了。 找林更新,逻辑很清晰:他是腾势D9的真实车主,从用户变成代言人,感觉更真实、更可信。 他形象也偏稳重踏实,和腾势想塑造的“新豪华”...<br>- 林更新成为腾势N8L车主,共同奔赴美好出行新旅程:  腾势N8L以“超安全家庭大六座、超豪华移动大平层、超智能科技大座驾”定义美好出行,搭载易三方、天神之眼B、云辇-A等硬核科技,以超越传统豪华的品质标准,诠释家用车的豪华感、安全感与科技感。上市后腾势...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>明星同款座驾进化史</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>明星换车时间轴：追踪林更新等明星座驾更迭历程，从D9到N8L的升级故事</li><li>车主身份验证挑战：上传车钥匙/行驶证解锁'XX同款车主'专属徽章</li><li>换车理由投票PK：网友猜测明星换车真实原因，官方不定期揭秘互动</li><li>座驾匹配测试：输入你的性格/职业，AI匹配你的'明星车主气质'</li><li>品牌大使预测榜：押注下一个品牌会找谁代言，猜中赢试驾体验券</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-40岁关注明星动态的汽车消费潜在用户、喜欢八卦娱乐但有购车需求的年轻家庭用户、腾势等新能源品牌的粉丝群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        王玉雯把猥琐劲儿给演出来了
+                        <span class="heat-badge">🔥  370854</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 从清纯校花到“猥琐”反派:王玉雯用演技打了谁的脸?:  一、角色突破:撕掉标签的“毁容式”表演 对于以青春、清纯形象被熟知的王玉雯来说,出演“吴小莉”是一次大胆的冒险。她并未停留在表面的“扮丑”,而是通过细节设计精准抓住了角色的灵魂:那种市井小人物在权力...<br>- 王玉雯这一次把渣女的轻佻和猥琐劲儿演绎得淋漓尽致: 在热播剧《突然的喜欢》中,王玉雯因一场刻意扮油的相亲戏引发热议,她通过浮夸的肢体语言和轻佻台词将角色猥琐劲儿演绎得活灵活现,这一反套路表演成为观众讨论焦点。  角色动机驱动的油式演技策略性猥琐感。剧中...<br>- 王玉雯捅大娄子:一场无法回头的风波背后真相大揭晓! :   王玉雯,是一位近年来备受瞩目的年轻明星,因其出色的演技和可爱的形象赢得了众多粉丝。在短时间内,他的名气与日俱增,成为了新一代偶像的代表。然而,正是这种光芒四射的事业,让他在公众面前暴露出更多的风险...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>戏精附体</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI换脸体验：上传自拍秒变经典影视剧反派角色，体验'猥琐演技'</li><li>表情微操教学：拆解明星演技细节，教你用眼神、嘴角演出'油腻感'、'清纯感'等不同气质</li><li>角色反差挑战：同一用户录制清纯vs猥琐两种风格短视频，AI评分对比</li><li>演技Battle擂台：用户上传模仿片段，票选'最佳戏精'，赢取明星同款周边</li><li>热搜角色图鉴：实时追踪热播剧争议角色，生成演技分析报告和模仿攻略</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁追剧党、短视频创作者、表演爱好者、想提升镜头表现力的普通用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        女子被一次性拔牙12颗后心梗休克
+                        <span class="heat-badge">🔥  244444</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 53岁女子本想种牙,却被一次性拔12颗牙致心梗休克,当地卫健局回应:  近日,山西曲沃一位市民在网上爆料称,自己的舅妈去当地一家口腔诊所看牙,医生一次性把其上方12颗牙拔光,引发心梗、休克。 1月22日,患者的儿子韩先生告诉记者,诊所到现在都没有主动联系协商此事。封面新...<br>- 女子被一次性拔牙12颗后心梗休克!医生操作惹争议:  一、事件经过:从看牙到重症监护 1. 患者就诊情况 据家属描述,患者因牙齿问题前往当地一家口腔诊所就医。在诊疗过程中,医生建议拔除上方多颗牙齿。在没有充分告知风险并征得明确同意的情况下,医生一次性拔...<br>- 女子被一次性拔牙12颗后心梗休克 儿子:事前没告知拔这么多:  【#女子被一次性拔牙12颗后心梗休克# 儿子:事前没告知拔这么多】#卫健局回应女子被一次性拔牙12颗# 近日,山西曲沃,韩先生告诉@封面新闻 记者,53岁的母亲去当地一家口腔诊所看牙,医生一次性把其...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>牙医黑盒子</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI模拟拔牙方案评估：输入牙齿情况，AI判断一次性拔牙数量是否合理</li><li>术前风险问答Bot：模拟医生问诊，帮用户提前了解该问什么问题</li><li>诊所红黑榜：用户匿名分享就医经历，标注过度医疗/拒绝沟通等行为</li><li>电子知情同意书存档：拍照上传医院签署文件，云端永久保存维权证据</li><li>紧急情况SOS：一键生成医疗纠纷投诉模板，直连卫健局投诉通道</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-60岁有口腔治疗需求的普通人，尤其是对医疗流程不熟悉、担心被过度医疗的中老年群体及其子女</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">68/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        赵婷 奥斯卡
+                        <span class="heat-badge">🔥  232001</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 赵婷获金球奖:“国际化”不是中国电影人“无依之地”:  多元文化濡染与“他者视角”会给电影带来更多的可能性。这也让本已是本届奥斯卡热门作品的《无依之地》,呼声更高。第一位是37年前的芭芭拉·史翠珊。相比国内其他年轻影人,赵婷的意义在于,她会鼓励更多华语电...<br>- 本届金球奖最佳导演赵婷,“旁观者”拍出的“美国伤痕三部曲”何以惊艳世界:  赵婷1982年生于北京,是个地地道道的北京女孩,她还有一个著名的身份:宋丹丹的继女。1997年,15岁的赵婷到英国留学,她在英国本科学的是政治,不过兴趣不高,几年后她选择到美国纽约大学电影学院就读研...<br>- 奥斯卡“前哨战”再下一城: 1月10日,2021年“美国国家影评人协会奖”出炉,《无依之地》斩获四项大奖,其中包括最佳影片奖、最佳导演奖、最佳女主角奖和最佳摄影奖。 这是赵婷作品三年内第二次拿下美国国家影评人协会奖最佳影片。此前...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>导演之路</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>华人影人全球成就可视化地图，追踪从金球奖到奥斯卡的征途</li><li>AI生成'如果你是导演'互动剧本创作游戏，体验赵婷式叙事风格</li><li>电影节冲奖模拟器：从独立电影到奥斯卡的闯关养成</li><li>跨文化视角解读功能：同一场景中美观众情感热力图对比</li><li>影迷预测联盟：押注颁奖季，用虚拟货币竞猜各大奖项归属</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁对电影艺术感兴趣的年轻人、影视专业学生、海外华人群体、颁奖季追踪爱好者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        泡泡玛特电子木鱼爆火
+                        <span class="heat-badge">🔥  200209</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 泡泡玛特新系列“电子木鱼”爆火,隐藏款溢价超200%:  本月,泡泡玛特新推出的“PUCKY敲敲系列”毛绒挂件盲盒,因轻拍即可发出清脆木鱼声,每款盲盒还对应特定吉祥寓意标签如“财富+1”“快乐+1”“智慧+1”等,被网友戏称为“电子木鱼”,精准切中年轻群体...<br>- 泡泡玛特电子木鱼爆火:一场情绪解压与商业创新的双重狂欢:  一、产品爆红:情绪解压与文化符号的双重创新 “PUCKY敲敲系列”的走红并非偶然,其成功源于对年轻群体情绪需求的深度洞察与文化符号的巧妙重构。 精准捕捉情绪痛点在快节奏、高压力的职场环境中,年轻人普...<br>- 泡泡玛特跨界电子木鱼,IP变现的禅意经济学:  从潮玩盲盒到电子功德 泡泡玛特这次跨界看似突兀,实则是精准踩中了Z世代的三大痛点:解压需求、社交货币和精神慰藉。电子木鱼上线首周突破500万用户的数据证明,当IP形象Dimoo化身数字比丘,年轻人愿...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>功德收集器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>每日敲木鱼打卡，解锁不同IP角色的木鱼音效和祝福语</li><li>功德值社交排行榜，支持好友间互赠功德、组队修行</li><li>AR敲木鱼模式，将虚拟木鱼投射到现实场景中敲击</li><li>情绪日记功能，敲击次数自动关联当日心情记录生成解压报告</li><li>功德商城兑换虚拟周边/实体优惠券，联动泡泡玛特IP盲盒抽奖</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁都市年轻人，尤其是职场新人、考研考公群体，追求解压、热衷社交分享、对潮玩IP有认知和好感的Z世代用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        米兰冬奥运动员公示
+                        <span class="heat-badge">🔥  188855</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 体育总局登山中心关于公示2026年米兰冬奥会滑雪登山项目参赛运动员的通知:  2026年米兰冬奥会滑雪登山项目将于2026年2月19日至21日在意大利博尔米奥举行,比赛设短距离和混合接力。中国队奥运会资格赛混合接力总积分排名世界第八,取得了一男一女参赛资格。按照《滑雪登山项目...<br>- 2026年米兰-科尔蒂纳冬奥会:  2026年米兰-科尔蒂纳冬奥会是第25届冬季奥林匹克运动会,于2026年2月6日至22日在意大利米兰和科尔蒂纳丹佩佐举行,开幕式在米兰圣西罗球场举办,闭幕式在维罗纳举行 [24-25],共有约290...<br>- 滑雪登山项目重返冬奥会,中国队实现满项参赛:  据国家体育总局登山中心官网,2026年米兰冬奥会滑雪登山项目参赛运动员名单正在公示,公示期截至1月17日。中国队凭借奥运会资格赛混合接力总积分世界第八的成绩,获得1个混合接力参赛资格及1男1女短距离...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冬奥登山家</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>虚拟滑雪登山挑战赛-用手机陀螺仪模拟爬坡滑行体验</li><li>运动员养成系统-从业余到奥运的成长路径解锁</li><li>实时海拔AR打卡-爬楼梯/登山同步换算滑雪登山里程</li><li>冬奥知识闯关-答题解锁运动员独家训练vlog</li><li>混合接力组队PK-邀请好友组成中国队挑战世界排名</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁对冬奥新兴项目好奇的年轻人、户外运动爱好者、喜欢收集成就徽章的游戏化体验用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        女子用开水浇他人车玻璃测试会否炸裂
+                        <span class="heat-badge">🔥  185299</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 女子用开水随机浇他人车玻璃测试会否炸裂引热议,后续改称视频中实为其妹妹的车,并非随机选取的路人车辆:  1月21日,一女子以测试 “开水淋车玻璃解冻是否会炸裂”为由,用开水浇淋冰雪覆盖的车辆挡风玻璃并发布视频引发热议。视频中,女子随机找了一辆小车进行测试,结尾处传来玻璃开裂的声响,视频随即戛然而止。...<br>- 女子用开水浇他人车除冰致裂,称赔钱比心疼自己车强:  近日多地遭遇强降雪天气,户外停放的车辆挡风玻璃普遍结冰。为快速除冰,有人尝试用热水浇淋,但这种方法存在较大风险,可能导致玻璃因温差过大而破裂。一位女子对此说法表示怀疑,特意进行现场测试。 她在一段自...<br>- 女子用开水浇他人车玻璃测试致碎裂:  #女子用开水浇他人车玻璃测试会否炸裂# 严寒天气车窗温度极低,浇淋热水会导致玻璃瞬间热胀冷缩,轻则出现裂纹,重则直接碎裂。一女子在楼下随机找别人的车做实验并拍摄短视频,视频结尾传来玻璃开裂的声响,她...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    91分
+                                </div>
+                                <div class="product-header">
+                                    <h3>作死实验室</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI模拟各种'民间偏方'实验结果（如开水浇玻璃、微波炉热鸡蛋等）</li><li>用户投稿'想测试但不敢做'的危险实验，AI生成模拟视频</li><li>翻车名场面合集：收录真实作死视频并标注科学原理</li><li>损失计算器：输入作死行为自动估算维修/赔偿费用</li><li>社区投票PK：猜测实验结果，答对赢积分换车险优惠券</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁爱看猎奇内容的年轻网民、对生活常识存疑的好奇宝宝、短视频重度用户、有车一族</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">75/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        东北早起上班跟穿越鳌太线一样
+                        <span class="heat-badge">🔥  159106</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 东北早起上班真的堪比穿越鳌太线吗?:  ❄️ 一、通勤如冒险:极端环境的具象化 极寒体感与行动困境 气温数据:东北多地实测温度达-26℃至-38℃,体感温度低至-31℃,车辆被冰霜完全覆盖,车门冻住需撬开,睫毛呼吸结霜成常态。 步行挑战:...<br>- 又是失温?聊一聊发生在鳌太线的事故:  故事发生在2026年1月2号凌晨到1月7号之间,有5名外地驴友,在网上临时组了队,计划在一天之内完成「小鳌太线」的穿越。 小鳌太线属于鳌太线的一个精简版,通常是从太白县太洋公路登山,然后从路平沟下山...<br>- 鳌太线:  鳌太线,是一条纵贯秦岭鳌山与太白山之间的线路,也是秦岭山脉海拔最高的一段主脊,被誉为“行走在中华龙脊”上的探险线路。 [33]直线距离约40公里,实际徒步距离超过170公里,需连续翻越17座海拔34...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>通勤求生指南</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>每日通勤难度评级（参照户外线路难度分级，如鳌太级、珠峰级）</li><li>实时体感温度+穿衣装备推荐（羽绒服厚度、暖宝宝数量计算器）</li><li>通勤成就系统（解锁'睫毛结霜勇士''撬车门大师'等徽章）</li><li>上班路况生存地图（标注暖气站点、热饮补给点、避风港）</li><li>通勤吐槽社区+段子生成器（一键生成'我的通勤堪比XX探险'对比图）</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">东北及北方极寒地区的上班族、大学生，以及对东北冬季生活好奇的南方网友</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        猝死程序员底薪3千干7个人的活
+                        <span class="heat-badge">🔥  159061</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 广州上市公司32岁程序员猝死:一人干7人活,底薪3千24小时待岗;妻子:若公司不配合,工伤认定大概率被驳回: 近日,广州一名32岁程序员高广辉猝死的事件引发社会广泛关注,其工伤认定进展、企业加班文化等问题持续受到热议。记者联系到高广辉的家人杨女士,对事件进行了进一步了解。  据杨女士介绍, 高广辉在河南长大,...<br>- 32岁程序员猝死背后:24小时待岗“吃掉”了多少打工人的生命:  被掏空的青春:一个程序员的最后24小时 翻开高广辉生前的日程表:早上7点出门,深夜11点回家,通勤路上接听客户电话,周末随时响应OA系统,睡眠被压缩到6小时。他的薪酬结构充满"智慧"——3000元底...<br>- 猝死程序员底薪3000,工资全靠加班:  1月22日,广州32岁程序员高广辉猝死事件持续发酵,其妻子曝光的“底薪3000元、收入全靠加班绩效”薪酬结构,揭开了部分企业隐形压榨的职场现状,引发全网对加班文化与劳动者权益的激烈讨论。截至目前,当...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>命价计算器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时计算你的时薪：输入底薪+加班时长，算出真实时薪（可能比最低工资还低）</li><li>猝死风险指数：根据睡眠、加班、通勤等数据生成你的'过劳指数'并可视化展示</li><li>工位人头比：一键测算你一个人干了几个人的活，生成'职场牛马认证'</li><li>匿名曝光墙：用户匿名分享自己公司的真实薪酬结构和加班情况</li><li>遗书生成器（黑色幽默）：根据你的工作强度自动生成'如果我猝死，请把这份加班记录交给劳动仲裁'的模板</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">996/007高强度工作的打工人，尤其是互联网、金融、广告等行业的年轻职场人</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">H5网页（易传播）+ 微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        演员表为啥越来越看不懂了
+                        <span class="heat-badge">🔥  158616</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 演员表为啥越来越让人看不懂?当演员表成了 “名利场”,观众该看什么?:  打开一部影视剧的片尾字幕,曾经简洁明了的 “主演”“配角” 早已被层层叠叠的头衔淹没。从 “领衔主演”“特别主演” 到 “特邀出演”“亲情出演”,十余类称谓交织成一张模糊的身份网,让观众难以分辨谁是...<br>- 热搜!演员表为啥越来越让人看不懂,网友:背后真相是博弈:  《镖人:风起大漠》公布的演员名单让人眼花缭乱。 影片由吴京、谢霆锋、于适、陈丽君、孙艺洲、此沙、李云霄“领衔主演”,梁家辉“特别演出”,张晋“友情主演”,惠英红“友情演出”,张译“友情客串”,李连杰...<br>- 《大宅门》22年后,演员处境大变样,有人选择息影,有人早已离世: 白景琦,一个鲜活的人物,在乱世的纷扰中傲然挺立。杨九红和白玉婷,两位风华绝代的女子,在情感的纠葛中绽放出独特的光彩。《大宅门》中的每一个人物,都如实地反映了那个时代的风貌。 2001年,《大宅门》在央...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>演员表翻译器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>智能解码影视剧演员表头衔，一键翻译成'大白话'版（如：特别主演=有排面的配角）</li><li>演员'咖位博弈'可视化图谱，用扑克牌大小直观展示真实戏份排名</li><li>用户投票功能：猜猜这个头衔到底啥意思，全网共创'头衔黑话词典'</li><li>AI预测演员实际出场时长，看完对比实际数据，打脸or神预测</li><li>生成趣味演员表：把复杂头衔翻译成'打酱油''露个脸''真正主角'等大实话版本并可分享</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-40岁追剧群体，尤其是对影视圈潜规则好奇、喜欢吐槽娱乐现象的年轻网民</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        一栗小莎子疑似患淋巴瘤
+                        <span class="heat-badge">🔥  158427</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 一栗小莎子确诊淋巴瘤!儿子才2岁:更多内情曝光!:  1月21号,正是大家忙着迎接新年的日子。 在短视频平台上,那个曾被称为“纯欲天花板”的网红一栗小莎子,突然更新了一条视频。 画面中,一家三口将手温馨地叠放在一起,随着手掌慢慢打开,一张全家福赫然出现...<br>- 30岁网红一栗小莎子自曝确诊淋巴瘤,曾靠擦边跳舞走红,如今儿子才2岁:  “朋友们,我要去打怪升级啦! ”1月21日,千万粉丝网红一栗小莎子在视频账号留下这句看似轻松的话。 只有经历过的人才懂,这轻描淡写的“打怪升级”背后,是淋巴瘤确诊后的漫长抗癌路。 叠放的三只手缓缓打...<br>- 知名网红“一栗小莎子”确诊癌症,疑熬夜不开心导致,儿子才两岁:  有网友在评论区里关心一栗小莎子问她是怎么了一栗小莎子回应道可能是淋巴瘤。 要知道淋巴瘤这种病是一种恶性肿瘤如果不经过控制会随着淋巴与血液布满全身。 也难怪一栗小莎子在检查结果还没出时就如此担心结果的...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>淋巴卫士</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI症状自测：通过问答+上传淋巴结部位照片，初步评估淋巴异常风险</li><li>网红健康档案：追踪公众人物健康事件，用真实案例做科普警示</li><li>熬夜伤害可视化：连接手机使用数据，生成「熬夜对淋巴系统伤害值」报告</li><li>抗癌日记社区：患者/家属匿名分享治疗经历，支持「打怪升级」成就体系</li><li>一键预约体检：对接三甲医院淋巴专项筛查，30岁+用户专属提醒</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-40岁经常熬夜的职场人群、关注网红动态的年轻用户、有家族病史或健康焦虑的人群、淋巴瘤患者及家属</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">68/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        黄金
+                        <span class="heat-badge">🔥  157994</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 离谱!40万涉案黄金无人认,公告刚发就有人凌晨冒领?背后水太深了:  一、事件复盘:360克老凤祥黄金,40万身价成“无主物”? 先给大家把事情的基本情况说清楚。2025年12月23号,陕西神木市公安局发了个特殊的寻主公告,内容特别简单:警方办案的时候,扣了9块刻着“...<br>- 黄金狂飙:4800美元背后的市场博弈与消费抉择:  一、价格狂飙:从4500到4800的加速突破 1. 全球避险情绪点燃黄金需求 2026年开年以来,黄金价格呈现“阶梯式”上涨态势。1月20日,美国总统特朗普宣布对法国葡萄酒加征200%关税,并重申对...<br>- 黄金:  黄金(Gold)是化学元素金(Au)的单质形式,具有金黄色、质软、抗腐蚀等特性,化学符号Au源自罗马神话中的“黎明女神”欧若拉(Aurora)。作为稀有金属,其在地壳中平均含量约亿分之1.1,主要用...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    89分
+                                </div>
+                                <div class="product-header">
+                                    <h3>黄金猎人</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时金价播报+价格异动推送（涨跌超1%立即提醒）</li><li>黄金身世鉴定器：扫描金饰查品牌/纯度/回收价，识别'无主黄金'式骗局</li><li>金价时光机：输入任意日期查当时金价，计算'如果当年买了现在值多少'</li><li>全国金店比价地图：同款首饰不同店铺价格对比+砍价话术生成</li><li>黄金冷知识日历：每日推送奇葩黄金新闻+历史上的今天金价事件</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-45岁对黄金投资/消费感兴趣的都市人群，包括想买金饰的准新人、关注避险资产的投资小白、喜欢吃瓜的社会新闻爱好者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
