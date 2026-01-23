@@ -228,7 +228,6 @@ class WeiboHotSearchAnalyzer:
         """分析产品创意"""
         topic_title = topic.get('title', '未知话题')
 
-        prompt = f"""
         task_prompt = """
         任务：
         1. 首先，请基于上述原始背景信息，整理一段通顺、简洁的事件背景总结（约100字），去除无关信息。
