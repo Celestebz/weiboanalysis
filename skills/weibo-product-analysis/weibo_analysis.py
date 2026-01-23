@@ -111,9 +111,9 @@ class WeiboHotSearchAnalyzer:
                 return []
 
             for i, item in enumerate(items[:15]): # 取前15个
-                # 适配字段
-                title = item.get('word') or item.get('keyword') or item.get('title')
-                heat = item.get('num') or item.get('hot_word_num') or item.get('heat') or 'N/A'
+                # 适配字段 - 恢复对 TianAPI (hotword) 和其他格式的支持
+                title = item.get('word') or item.get('keyword') or item.get('title') or item.get('hotword') or item.get('note')
+                heat = item.get('num') or item.get('hot_word_num') or item.get('heat') or item.get('hotwordnum') or 'N/A'
                 rank = i + 1
                 
                 if title:
@@ -122,6 +122,9 @@ class WeiboHotSearchAnalyzer:
                         "title": title,
                         "heat": heat
                     })
+                elif i == 0:
+                    # 如果第一条就没有标题，打印一下它的键值，方便调试
+                    print(f"⚠️ 第一条数据未找到标题字段，可用键: {list(item.keys())}")
             
             print(f"✅ 成功获取 {len(self.hot_topics)} 个热搜话题")
             return self.hot_topics
