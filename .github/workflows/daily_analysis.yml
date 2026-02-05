@@ -2,49 +2,236 @@ name: Daily Weibo Product Analysis
 
 on:
   schedule:
-    # 北京时间每天早上 6:00 (UTC 22:00 前一天)
     # 北京时间每天早上 6:15 (UTC 22:15 前一天) - 避开整点高峰
     - cron: '15 22 * * *'
   workflow_dispatch:  # 允许手动触发
 
+# 设置 GITHUB_TOKEN 的权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只允许一个并发部署
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
+  # ==================== 分析任务 ====================
   analyze:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # 允许写入仓库（如果需要提交报告）
-
     steps:
-      - name: Checkout code
+      - name: 🛎️ Checkout 代码
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r skills/weibo-product-analysis/requirements.txt
 
-      - name: Run Analysis
+      - name: 🚀 Run Analysis
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           WEIBO_API_URL: ${{ secrets.WEIBO_API_URL }}
           BAIDU_API_KEY: ${{ secrets.BAIDU_API_KEY }}
         run: |
           mkdir -p reports
-          # 直接在根目录运行，避免 cd 带来的路径困扰
           python skills/weibo-product-analysis/weibo_analysis.py --output reports/daily_report_$(date +'%Y%m%d').html
           
           # Debug: 打印目录结构检查文件是否生成
           echo "📂 Listing reports directory:"
           ls -R reports/
 
-      - name: Upload Report Artifact
+      - name: 📤 Upload Report Artifact
         uses: actions/upload-artifact@v4
         with:
           name: weibo-analysis-report
           path: reports/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
+
+  # ==================== 部署到 GitHub Pages ====================
+  deploy-to-pages:
+    needs: analyze  # 依赖分析任务完成
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: 🛎️ Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 📥 拉取最新提交
+        run: git pull origin main || true
+
+      - name: 📥 Download Report Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: weibo-analysis-report
+          path: ./public/reports
+
+      - name: 📝 Create index.html
+        run: |
+          mkdir -p ./public
+          
+          # 找到最新的报告文件
+          LATEST_REPORT=$(ls -t ./public/reports/*.html 2>/dev/null | head -1)
+          REPORT_NAME=$(basename "$LATEST_REPORT" 2>/dev/null || echo "")
+          
+          # 生成首页 HTML
+          cat > ./public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>微博热搜产品创意分析</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      min-height: 100vh;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      padding: 20px;
+                  }
+                  .container {
+                      background: rgba(255,255,255,0.95);
+                      border-radius: 20px;
+                      padding: 40px;
+                      max-width: 600px;
+                      text-align: center;
+                      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                  }
+                  h1 { color: #333; margin-bottom: 20px; font-size: 28px; }
+                  p { color: #666; margin-bottom: 30px; line-height: 1.6; }
+                  .btn {
+                      display: inline-block;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      text-decoration: none;
+                      padding: 15px 40px;
+                      border-radius: 30px;
+                      font-size: 18px;
+                      font-weight: bold;
+                      transition: transform 0.3s, box-shadow 0.3s;
+                  }
+                  .btn:hover {
+                      transform: translateY(-3px);
+                      box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+                  }
+                  .update-time { color: #999; font-size: 14px; margin-top: 20px; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🔥 微博热搜产品创意分析</h1>
+                  <p>每日自动分析微博热搜话题，挖掘产品创意灵感。<br>基于 AI 智能分析，提供深度洞察。</p>
+                  <a href="./reports/" class="btn">📊 查看最新报告</a>
+                  <p class="update-time">更新时间：每天北京时间 06:15</p>
+              </div>
+          </body>
+          </html>
+          EOF
+          
+          # 生成报告列表页
+          cat > ./public/reports/index.html << 'LISTEOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>报告列表 - 微博热搜分析</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+                      background: #f5f7fa;
+                      padding: 40px 20px;
+                  }
+                  .container { max-width: 800px; margin: 0 auto; }
+                  h1 { color: #333; margin-bottom: 30px; text-align: center; }
+                  .report-list { list-style: none; }
+                  .report-item {
+                      background: white;
+                      border-radius: 10px;
+                      padding: 20px;
+                      margin-bottom: 15px;
+                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                      transition: transform 0.2s;
+                  }
+                  .report-item:hover { transform: translateX(10px); }
+                  .report-item a {
+                      color: #667eea;
+                      text-decoration: none;
+                      font-size: 18px;
+                      font-weight: 500;
+                  }
+                  .back-link {
+                      display: block;
+                      text-align: center;
+                      margin-top: 30px;
+                      color: #667eea;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>📋 历史报告列表</h1>
+                  <ul class="report-list" id="reportList"></ul>
+                  <a href="../" class="back-link">← 返回首页</a>
+              </div>
+              <script>
+                  // 动态列出所有报告（简化版，实际会显示当前目录的 HTML 文件）
+                  const files = [
+          LISTEOF
+          
+          # 列出所有报告文件
+          for f in $(ls -t ./public/reports/*.html 2>/dev/null | grep -v index.html); do
+            name=$(basename "$f")
+            echo "            '$name'," >> ./public/reports/index.html
+          done
+          
+          cat >> ./public/reports/index.html << 'LISTEOF2'
+                  ];
+                  const list = document.getElementById('reportList');
+                  files.forEach(f => {
+                      if (f) {
+                          const li = document.createElement('li');
+                          li.className = 'report-item';
+                          li.innerHTML = `<a href="./${f}">📄 ${f}</a>`;
+                          list.appendChild(li);
+                      }
+                  });
+                  if (files.length === 0 || (files.length === 1 && files[0] === '')) {
+                      list.innerHTML = '<li class="report-item">暂无报告</li>';
+                  }
+              </script>
+          </body>
+          </html>
+          LISTEOF2
+          
+          echo "📂 Public directory contents:"
+          ls -la ./public/
+          ls -la ./public/reports/
+
+      - name: 🔧 配置 GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: 📤 上传到 Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+
+      - name: 🚀 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
