@@ -1,7 +1,7 @@
 import os
 import glob
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import re
 
 # ================= 配置区域 =================
@@ -44,7 +44,8 @@ def main():
 
     # 3. 识别今天的报告 (用于下拉菜单)
     # 兼容两种时间格式: YYYYMMDD (20260101) 和 YYMMDD (260101)
-    today = datetime.now()
+    # 使用北京时间 (UTC+8)
+    today = datetime.now(timezone.utc) + timedelta(hours=8)
     today_str_long = today.strftime("%Y%m%d")
     today_str_short = today.strftime("%y%m%d")
     

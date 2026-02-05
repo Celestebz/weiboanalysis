@@ -17,7 +17,7 @@
 import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 import requests
 from pathlib import Path
@@ -373,7 +373,9 @@ class WeiboHotSearchAnalyzer:
 
         # 计算统计数据
         stats = self.calculate_statistics(self.analysis_results)
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 使用北京时间 (UTC+8)
+        beijing_time = datetime.now(timezone.utc) + timedelta(hours=8)
+        timestamp = beijing_time.strftime("%Y-%m-%d %H:%M:%S")
 
         # 生成内容
         content_html = ""
@@ -488,9 +490,11 @@ class WeiboHotSearchAnalyzer:
             html_content = html_content.replace(key, value)
 
         # 确保输出目录存在
+        # 使用北京时间 (UTC+8) 作为文件标识
+        beijing_time = datetime.now(timezone.utc) + timedelta(hours=8)
         if not output_path:
-            date_id = datetime.now().strftime("%y%m%d")
-            time_id = datetime.now().strftime("%H%M")
+            date_id = beijing_time.strftime("%y%m%d")
+            time_id = beijing_time.strftime("%H%M")
             # 默认输出到当前目录下的 reports 文件夹
             report_dir = Path("reports")
             report_dir.mkdir(exist_ok=True)
