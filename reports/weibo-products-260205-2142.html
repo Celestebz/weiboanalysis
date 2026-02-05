@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-02-05 21:42:42</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">86.1</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        微博之夜内场
+                        <span class="heat-badge">🔥 盛典 9910042</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                「微博之夜内场」是微博年度盛典的核心环节，汇聚众多明星、网红及行业大咖。内场座位安排、明星互动、红毯造型等话题备受网友关注，成为每年娱乐圈的焦点事件，引发大量讨论和二次创作。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>吃瓜现场</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI实时解读内场座位图，分析明星关系远近</li><li>弹幕式「名场面」标记，用户可投票选出最佳瞬间</li><li>虚拟内场漫游，360度查看明星造型和互动细节</li><li>「社交距离计算器」趣味分析明星之间的互动频率</li><li>盛典预测游戏，竞猜谁会同框、谁会获奖赢积分</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁追星族、娱乐八卦爱好者、喜欢参与互动讨论的年轻网友</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        肖战 害羞笑
+                        <span class="heat-badge">🔥 盛典 2682393</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，演员肖战在某活动或采访中展现出害羞微笑的可爱瞬间，相关视频或图片在社交平台广泛传播。粉丝们纷纷表示被这一真实自然的表情所打动，话题迅速登上微博热搜，再次展现了肖战的超高人气和粉丝号召力。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    84分
+                                </div>
+                                <div class="product-header">
+                                    <h3>笑颜捕手</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI智能识别明星微表情并自动截取最佳笑容瞬间</li><li>一键生成「害羞笑」「甜笑」「大笑」等表情包合集</li><li>粉丝社区投票评选「今日最治愈笑容」</li><li>笑容日历功能记录爱豆每日笑容打卡</li><li>AR滤镜让用户体验同款害羞笑特效</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">追星族群体，尤其是喜欢收集爱豆表情包、热衷参与粉丝社区互动的年轻女性用户，年龄集中在16-30岁</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">12/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        中国战机帅气溢出屏幕
+                        <span class="heat-badge">🔥  1492043</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年2月3日，第十届新加坡航展正式开幕。中国空军八一飞行表演队携6架歼-10表演机亮相，在海空之间上演精彩飞行表演。同时，歼-35A隐身战斗机「C位」亮相，中国航空工业集团展区成为全场焦点，展现了中国航空实力与开放自信的大国形象。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>战鹰图鉴</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR识别战机：扫描图片或视频自动识别战机型号并展示3D模型</li><li>战机百科卡牌：收集各国战机卡牌，含性能参数、服役历史等趣味知识</li><li>模拟飞行表演：用手机陀螺仪体验八一表演队经典编队动作</li><li>航展直播日历：全球航展时间表及精彩瞬间回放</li><li>军迷社区：分享航展见闻、战机摄影作品，与同好交流</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">军事爱好者、航空迷、青少年国防教育群体、对「硬核科技」感兴趣的年轻用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        周生生涉事挂坠送检结果为足金
+                        <span class="heat-badge">🔥  1280315</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，有消费者质疑周生生品牌销售的黄金挂坠成色问题，引发社会关注。经相关部门送检后，检测结果显示该涉事挂坠确为「足金」，符合国家标准。这一结果为品牌正名，也再次引发公众对黄金饰品真伪鉴别及消费者维权的讨论。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>金鉴侠</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR扫描黄金饰品，实时显示成色参考信息及市场均价</li><li>一键生成「送检攻略」，包含附近检测机构地址、费用及流程</li><li>黄金饰品购买「避坑清单」，汇总网友真实踩雷经验</li><li>品牌信誉档案库，展示各大金店历史投诉及处理情况</li><li>维权模板一键生成，支持投诉信、社交媒体曝光文案智能撰写</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-45岁有黄金饰品购买需求的消费者，尤其是首次购金、担心被骗的年轻人及为子女购置婚嫁金饰的中年家长</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">68/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        王者荣耀小马糕
+                        <span class="heat-badge">🔥  1162009</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                「王者荣耀小马糕」是王者荣耀游戏与美食跨界联动的热门话题。游戏中的人气英雄「小马超」形象被制作成可爱的糕点造型，引发玩家群体的广泛关注和讨论。这种将游戏IP与传统美食结合的创意，既满足了玩家的情感需求，也展现了游戏文化的破圈影响力。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>糕玩英雄</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI糕点设计器：上传喜欢的游戏角色，自动生成可制作的糕点造型图纸</li><li>3D预览与AR摆盘：在手机上360度查看糕点效果，AR投影到餐桌上</li><li>分步教学视频：从和面到成型，每个英雄糕点配套详细制作教程</li><li>玩家作品社区：晒出自制糕点，参与「最像原角色」投票PK赛</li><li>联名店铺地图：标注全国可购买游戏联名糕点的线下门店位置</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁的王者荣耀玩家群体，尤其是喜欢手工制作、热衷分享生活的年轻女性玩家，以及对游戏周边有收藏爱好的核心粉丝</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        杨幂身子斜的都快躺那了
+                        <span class="heat-badge">🔥 盛典 1140113</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，杨幂出席某活动或拍摄时的一张照片引发网友热议。照片中杨幂身体倾斜角度较大，姿态慵懒，被网友调侃「身子斜的都快躺那了」。该话题迅速登上微博热搜，引发大众对明星拍照姿势、仪态管理等方面的讨论。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    84分
+                                </div>
+                                <div class="product-header">
+                                    <h3>斜度测量器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI实时检测照片中人物身体倾斜角度并生成「斜度报告」</li><li>提供「杨幂同款斜度挑战」趣味拍照模板</li><li>内置「仪态矫正指南」帮助用户改善拍照姿势</li><li>生成个人专属「斜度人格」趣味测试结果可分享朋友圈</li><li>明星斜度排行榜，收录各路明星经典「斜」照对比</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁热衷社交媒体、喜欢追星和自拍的年轻用户，尤其是对拍照姿势有改善需求或喜欢玩梗的群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">12/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        王一博路过之处没人敢吱声
+                        <span class="heat-badge">🔥  1114045</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，知名艺人王一博出席活动时，现场气氛异常安静，路过之处无人敢出声，引发网友热议。有人认为这体现了其强大气场，也有人调侃是「社恐现场」。该话题迅速登上微博热搜，粉丝与路人纷纷讨论明星的「压迫感」现象。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    83分
+                                </div>
+                                <div class="product-header">
+                                    <h3>气场测试仪</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI分析用户走路姿态生成「气场指数」</li><li>模拟明星同款BGM配合入场特效</li><li>生成个人专属「气场报告」可分享朋友圈</li><li>气场PK排行榜与好友比拼</li><li>解锁不同气场称号如「全场静音者」「人群分割机」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁追星群体、喜欢社交娱乐的年轻用户、热衷自我展示与趣味测试的Z世代</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">75/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">8/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        90后的年龄跨度有多大
+                        <span class="heat-badge">🔥  1109904</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                微博热搜「90后的年龄跨度有多大」引发网友热议。90后出生于1990年至1999年，如今最大的90后已经35岁，最小的也有26岁。这一代人横跨了从「奔四」到「刚过25」的巨大年龄差，既有已为人父母的中年人，也有刚步入职场不久的年轻人，引发集体感慨时光飞逝。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>时光计算器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>输入出生年份，生成专属「人生进度条」可视化报告</li><li>同龄人对比功能：展示同年出生的明星、名人现在的状态</li><li>「那一年」时光胶囊：回顾出生年份的物价、流行歌曲、热门事件</li><li>年龄里程碑提醒：距离下一个整数年龄还有多少天</li><li>生成趣味年龄海报：「我已经活了XX天」「心理年龄测试」等社交分享图</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">80后、90后、00后等对年龄话题敏感、喜欢怀旧和社交分享的年轻用户群体，尤其是即将或刚过整数年龄节点的人群</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        宁波女婴术后离世调查处置情况
+                        <span class="heat-badge">🔥  1107986</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                宁波一名女婴在接受手术后不幸离世，引发社会广泛关注。当地相关部门已介入调查，并公布了初步处置情况。该事件涉及医疗安全、婴幼儿救治等敏感议题，家属与医院之间存在争议，公众期待调查结果能还原真相、明确责任。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    80分
+                                </div>
+                                <div class="product-header">
+                                    <h3>医路守护</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>医院资质与医生执业信息一键查询</li><li>手术风险评估知识库与术前问答清单生成</li><li>医疗纠纷处理流程指引与维权渠道汇总</li><li>患者就医经历匿名分享社区</li><li>AI智能陪诊助手提供术前术后注意事项提醒</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">有就医需求的患者及家属，尤其是需要为婴幼儿、老人等特殊群体选择医院和手术方案的家庭用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">62/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        圣罗兰认领肖战
+                        <span class="heat-badge">🔥 盛典 1106415</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                国际奢侈品牌圣罗兰（YSL）官宣肖战成为其品牌代言人或大使，引发粉丝热议。这一商业合作被粉丝戏称为「认领」，体现了品牌对肖战商业价值的认可，也再次证明其在时尚领域的影响力。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>星耀契约</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>明星代言实时追踪：自动抓取各大品牌官宣动态，第一时间推送爱豆商业合作信息</li><li>代言日历：可视化展示明星代言品牌时间线，支持设置提醒抢购限定款</li><li>品牌匹配度投票：粉丝可为明星与品牌的契合度打分，生成「最佳CP榜」</li><li>代言战绩PK：统计明星代言数量、品牌档次、销售数据等，生成商业价值排行榜</li><li>联名产品预约：整合各品牌明星联名款，一键预约抢购提醒</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">追星族群体，尤其是关注爱豆商业价值、热衷购买明星代言产品的18-35岁年轻女性用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        张天爱生病
+                        <span class="heat-badge">🔥  945906</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                知名演员张天爱近日因身体不适引发网友关注，相关话题登上微博热搜。作为「雪中悍刀行」「我的体育老师」等热门剧集的主演，张天爱一直以健康活力的形象示人，此次生病消息让粉丝纷纷表达关心与祝福，希望她早日康复。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>「爱豆健康守护站」</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>明星健康动态追踪：实时推送关注明星的健康相关消息</li><li>云端祝福墙：粉丝可发送创意祝福卡片，汇聚正能量</li><li>健康知识科普：根据明星病症推送相关养生小贴士</li><li>虚拟陪伴康复：用AI生成明星康复日记，趣味互动</li><li>粉丝应援打卡：每日健康打卡为偶像积攒「康复能量值」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁追星群体，尤其是关心偶像身心健康、希望表达关爱的活跃粉丝用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        豆瓣崩了
+                        <span class="heat-badge">🔥  945179</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                豆瓣网站疑似出现服务器故障，导致大量用户无法正常访问或使用其核心功能，如查看电影评分、书评、小组讨论等。该事件迅速登上微博热搜，引发网友热议，许多用户表示「又崩了」，反映出豆瓣服务稳定性问题已非首次发生。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>崩了没</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时监测主流互联网产品（豆瓣、微博、B站等）的服务状态</li><li>用户可一键「报崩」上报故障，形成众包式监测网络</li><li>故障发生时推送通知，并显示「崩溃热力图」展示受影响区域</li><li>提供历史崩溃记录和「崩溃日历」，统计各平台稳定性排行榜</li><li>崩溃期间开启「摸鱼聊天室」，让等待的用户互相吐槽解闷</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">重度互联网产品用户，尤其是依赖豆瓣、微博、B站等平台进行日常娱乐、工作或社交的年轻群体，以及对互联网产品稳定性有关注需求的科技爱好者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + 浏览器插件</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        微博之夜奖项
+                        <span class="heat-badge">🔥 盛典 935713</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                「微博之夜」是微博平台每年举办的年度盛典活动，通过颁发各类奖项表彰年度热门人物、事件和作品。该活动涵盖娱乐、体育、社会等多个领域，是微博生态中最具影响力的年度评选活动之一，备受网友和明星关注。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>星光预言家</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI预测各奖项归属，用户可参与竞猜PK</li><li>实时「红毯直播弹幕互动」功能，支持送虚拟应援道具</li><li>「奖项热度地图」可视化展示各奖项讨论热度分布</li><li>「明星穿搭图鉴」自动抓取红毯造型并支持用户投票打分</li><li>「颁奖典礼时间轴」回顾历届获奖名单及经典瞬间</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁追星群体、娱乐八卦爱好者、喜欢参与互动竞猜的年轻用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        哇塞居然是脏话
+                        <span class="heat-badge">🔥  929977</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，网友发现「哇塞」一词竟然是脏话引发热议。据考证，「哇塞」源自闽南语，原意为表达惊讶的粗俗用语，类似于脏话。但随着时代演变，该词已逐渐「洗白」，成为日常表达惊叹的口头禅，许多人在不知情的情况下频繁使用，引发网友对汉语词源的好奇与讨论。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    87分
+                                </div>
+                                <div class="product-header">
+                                    <h3>词源侦探社</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>「脏话鉴定器」：输入日常用语，AI揭秘其是否曾是脏话或有不雅起源</li><li>「词语进化史」：用趣味漫画展示词语从古至今的含义演变过程</li><li>「方言溯源」：追溯普通话词汇的方言出处，配有真人发音对比</li><li>「每日冷知识」：推送一个意想不到的词源故事，支持分享到社交平台</li><li>「词语红黑榜」：用户投票选出「最意外的脏话」和「最冤枉的好词」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁对语言文化感兴趣的年轻人，尤其是喜欢分享冷知识、热衷社交话题的用户群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">75/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">12/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        小洛熙事件为一级甲等医疗事故
+                        <span class="heat-badge">🔥  922100</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                网红博主「小洛熙」疑似在医疗美容或就医过程中遭遇严重医疗事故，经相关部门鉴定为「一级甲等医疗事故」（即造成患者死亡的最严重等级）。该事件引发公众对医疗安全、医美行业监管等问题的广泛关注与讨论。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>医鉴通</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>医疗事故等级科普：用可视化方式解读一级甲等到四级医疗事故的定义与案例</li><li>就医风险评估：根据医院资质、科室评级、医生执业信息生成就医安全指数</li><li>维权流程指引：提供医疗纠纷从鉴定申请到法律诉讼的全流程SOP模板</li><li>医美机构查验：一键查询医美机构资质、医生执照、历史处罚记录</li><li>病历存证助手：支持就诊记录、沟通录音的区块链存证，防止证据灭失</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">有就医需求的普通患者、医美消费者、曾遭遇医疗纠纷的维权群体、关注健康安全的年轻女性用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">68/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
