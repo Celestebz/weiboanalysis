@@ -41,188 +41,221 @@ jobs:
           WEIBO_API_URL: ${{ secrets.WEIBO_API_URL }}
           BAIDU_API_KEY: ${{ secrets.BAIDU_API_KEY }}
         run: |
-          mkdir -p reports
-          python skills/weibo-product-analysis/weibo_analysis.py --output reports/daily_report_$(date +'%Y%m%d').html
+          # 配置具体的 Git 用户信息
+          git config --global user.name "WeiboAnalysisBot"
+          git config --global user.email "bot@weiboanalysis.com"
           
-          # Debug: 打印目录结构检查文件是否生成
-          echo "📂 Listing reports directory:"
-          ls -R reports/
-
-      - name: 📤 Upload Report Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: weibo-analysis-report
-          path: reports/
-          if-no-files-found: error
-          retention-days: 30
+          # 拉取最新代码防止冲突
+          git pull origin main || true
+          
+          mkdir -p reports
+          
+          # 生成带时间戳的文件名 (e.g., weibo_report_20260123_0815.html)
+          TIMESTAMP=$(date +'%Y%m%d_%H%M')
+          FILENAME="reports/weibo_report_${TIMESTAMP}.html"
+          
+          python skills/weibo-product-analysis/weibo_analysis.py --output "$FILENAME"
+          
+          # 提交报告到仓库 (作为永久归档)
+          git add reports/
+          # 如果有新生成的报告才提交
+          if [ -n "$(git status --porcelain reports/)" ]; then
+            git commit -m "feat(report): Add analysis report for $TIMESTAMP"
+            git push origin main
+          else
+            echo "⚠️ No changes in reports directory to commit."
+          fi
 
   # ==================== 部署到 GitHub Pages ====================
   deploy-to-pages:
-    needs: analyze  # 依赖分析任务完成
+    needs: analyze
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
-      - name: 🛎️ Checkout 代码
+      - name: 🛎️ Checkout 代码 (含最新报告)
         uses: actions/checkout@v4
-
-      - name: 📥 拉取最新提交
-        run: git pull origin main || true
-
-      - name: 📥 Download Report Artifact
-        uses: actions/download-artifact@v4
         with:
-          name: weibo-analysis-report
-          path: ./public/reports
+          fetch-depth: 0 # 获取完整历史以便正确排序
 
-      - name: 📝 Create index.html
+      - name: � Set up Python for Site Gen
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 🏗️ 构建站点 (注入导航栏)
+        shell: python
         run: |
-          mkdir -p ./public
+          import os
+          import glob
+          import shutil
+          from datetime import datetime
+          import re
+
+          # 配置
+          PUBLIC_DIR = "public"
+          REPORTS_DIR = "reports"
+          os.makedirs(PUBLIC_DIR, exist_ok=True)
+          os.makedirs(os.path.join(PUBLIC_DIR, "reports"), exist_ok=True)
+
+          # 1. 获取所有报告文件并按文件名(包含时间)倒序排列
+          # 假设文件名格式: weibo_report_YYYYMMDD_HHMM.html 或 旧格式 daily_report_YYYYMMDD.html
+          all_reports = sorted(glob.glob(f"{REPORTS_DIR}/*.html"), reverse=True)
           
-          # 找到最新的报告文件
-          LATEST_REPORT=$(ls -t ./public/reports/*.html 2>/dev/null | head -1)
-          REPORT_NAME=$(basename "$LATEST_REPORT" 2>/dev/null || echo "")
+          if not all_reports:
+              print("❌ 未找到任何报告文件！")
+              exit(1)
+
+          latest_report_path = all_reports[0]
+          print(f"✅ 最新报告: {latest_report_path}")
+
+          # 2. 识别今天的报告 (用于下拉菜单)
+          today_str = datetime.now().strftime("%Y%m%d")
+          todays_reports = []
           
-          # 生成首页 HTML
-          cat > ./public/index.html << 'EOF'
+          for r in all_reports:
+              filename = os.path.basename(r)
+              # 匹配 YYYYMMDD
+              match = re.search(r'(\d{8})', filename)
+              if match and match.group(1) == today_str:
+                  todays_reports.append(r)
+          
+          # 3. 构建导航栏 HTML
+          dropdown_options = ""
+          for r in todays_reports:
+              fname = os.path.basename(r)
+              # 解析时间显示 (假设格式 _HHMM.html)
+              time_label = "今日报告"
+              time_match = re.search(r'_(\d{4})\.html', fname)
+              if time_match:
+                  hhmm = time_match.group(1)
+                  hour = int(hhmm[:2])
+                  min_str = hhmm[2:]
+                  period = "早报" if hour < 12 else "晚报"
+                  time_label = f"{hour}:{min_str} - {period}"
+              
+              # 设置下拉链接：指向 reports/ 目录下的文件
+              # 注意：如果当前是首页，链接应该是 reports/xxx
+              dropdown_options += f'<option value="reports/{fname}">{time_label}</option>'
+
+          navbar_html = f"""
+          <style>
+            #weibo-analysis-nav {{
+                position: fixed; top: 0; left: 0; right: 0;
+                height: 60px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 9999; display: flex; align-items: center; justify-content: space-between;
+                padding: 0 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            }}
+            #weibo-analysis-nav .logo {{ font-weight: bold; font-size: 18px; color: #333; display: flex; align-items: center; gap: 10px; }}
+            #weibo-analysis-nav .actions {{ display: flex; align-items: center; gap: 15px; }}
+            #weibo-analysis-nav select {{ 
+                padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: #f9f9f9; cursor: pointer;
+            }}
+            #weibo-analysis-nav .archive-btn {{
+                text-decoration: none; color: #fff; background: #333; padding: 6px 16px; border-radius: 6px; font-size: 14px; transition: opacity 0.2s;
+            }}
+            #weibo-analysis-nav .archive-btn:hover {{ opacity: 0.8; }}
+            body {{ padding-top: 60px !important; }} /* 给导航栏留位置 */
+          </style>
+          <div id="weibo-analysis-nav">
+              <div class="logo">
+                  <span>�</span> 微博热搜产品创意分析
+              </div>
+              <div class="actions">
+                  <span style="font-size:12px;color:#666">� 选择报告:</span>
+                  <select onchange="if(this.value) location.href=this.value">
+                      <option value="" disabled selected>查看今日其他...</option>
+                      {dropdown_options}
+                  </select>
+                  <a href="reports/index.html" class="archive-btn">📂 历史归档</a>
+              </div>
+          </div>
+          """
+
+          # 4. 生成 index.html (作为最新报告的镜像 + 导航栏)
+          with open(latest_report_path, 'r', encoding='utf-8') as f:
+              content = f.read()
+          
+          # 注入导航栏 (插入到 body 开始标签后)
+          if '<body' in content:
+              # 简单替换第一个 body 标签闭合处
+              content = re.sub(r'(<body[^>]*>)', r'\1' + navbar_html, content, count=1)
+          else:
+              content = navbar_html + content # 兜底
+
+          # 写入 public/index.html
+          with open(os.path.join(PUBLIC_DIR, "index.html"), 'w', encoding='utf-8') as f:
+              f.write(content)
+          
+          print("✅ 生成首页 index.html (注入导航栏)")
+
+          # 5. 复制所有报告到 public/reports/ 并生成归档页
+          for r in all_reports:
+              shutil.copy(r, os.path.join(PUBLIC_DIR, "reports"))
+          
+          # 生成归档页 HTML
+          archive_list_items = ""
+          for r in all_reports:
+              fname = os.path.basename(r)
+              date_match = re.search(r'(\d{8})', fname)
+              date_display = fname
+              if date_match:
+                  d = date_match.group(1)
+                  date_display = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+                  # 尝试提取时间
+                  t_match = re.search(r'_(\d{4})\.html', fname)
+                  if t_match:
+                      t = t_match.group(1)
+                      date_display += f" {t[:2]}:{t[2:]}"
+              
+              archive_list_items += f"""
+              <li style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                  <a href="{fname}" style="text-decoration: none; color: #2c3e50; font-weight: 500; font-size: 16px;">
+                     📄 {fname}
+                  </a>
+                  <span style="color: #95a5a6; font-size: 14px;">{date_display}</span>
+              </li>
+              """
+
+          archive_html = f"""
           <!DOCTYPE html>
           <html lang="zh-CN">
           <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>微博热搜产品创意分析</title>
+              <title>历史归档 - 微博热搜分析</title>
               <style>
-                  * { margin: 0; padding: 0; box-sizing: border-box; }
-                  body {
-                      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                      min-height: 100vh;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      padding: 20px;
-                  }
-                  .container {
-                      background: rgba(255,255,255,0.95);
-                      border-radius: 20px;
-                      padding: 40px;
-                      max-width: 600px;
-                      text-align: center;
-                      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                  }
-                  h1 { color: #333; margin-bottom: 20px; font-size: 28px; }
-                  p { color: #666; margin-bottom: 30px; line-height: 1.6; }
-                  .btn {
-                      display: inline-block;
-                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                      color: white;
-                      text-decoration: none;
-                      padding: 15px 40px;
-                      border-radius: 30px;
-                      font-size: 18px;
-                      font-weight: bold;
-                      transition: transform 0.3s, box-shadow 0.3s;
-                  }
-                  .btn:hover {
-                      transform: translateY(-3px);
-                      box-shadow: 0 10px 30px rgba(102,126,234,0.4);
-                  }
-                  .update-time { color: #999; font-size: 14px; margin-top: 20px; }
+                  body {{ font-family: -apple-system, sans-serif; background: #f8f9fa; margin: 0; padding: 40px 20px; }}
+                  .container {{ max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden; }}
+                  .header {{ background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }}
+                  h1 {{ margin: 0; font-size: 24px; }}
+                  ul {{ list-style: none; padding: 0; margin: 0; }}
+                  li:hover {{ background-color: #f8f9fa; }}
+                  .back-btn {{ display: block; text-align: center; padding: 20px; color: #667eea; text-decoration: none; border-top: 1px solid #eee; }}
               </style>
           </head>
           <body>
               <div class="container">
-                  <h1>🔥 微博热搜产品创意分析</h1>
-                  <p>每日自动分析微博热搜话题，挖掘产品创意灵感。<br>基于 AI 智能分析，提供深度洞察。</p>
-                  <a href="./reports/" class="btn">📊 查看最新报告</a>
-                  <p class="update-time">更新时间：每天北京时间 06:15</p>
+                  <div class="header">
+                      <h1>📂 历史报告归档</h1>
+                  </div>
+                  <ul>{archive_list_items}</ul>
+                  <a href="../" class="back-btn">← 返回最新报告</a>
               </div>
           </body>
           </html>
-          EOF
+          """
           
-          # 生成报告列表页
-          cat > ./public/reports/index.html << 'LISTEOF'
-          <!DOCTYPE html>
-          <html lang="zh-CN">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>报告列表 - 微博热搜分析</title>
-              <style>
-                  * { margin: 0; padding: 0; box-sizing: border-box; }
-                  body {
-                      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-                      background: #f5f7fa;
-                      padding: 40px 20px;
-                  }
-                  .container { max-width: 800px; margin: 0 auto; }
-                  h1 { color: #333; margin-bottom: 30px; text-align: center; }
-                  .report-list { list-style: none; }
-                  .report-item {
-                      background: white;
-                      border-radius: 10px;
-                      padding: 20px;
-                      margin-bottom: 15px;
-                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                      transition: transform 0.2s;
-                  }
-                  .report-item:hover { transform: translateX(10px); }
-                  .report-item a {
-                      color: #667eea;
-                      text-decoration: none;
-                      font-size: 18px;
-                      font-weight: 500;
-                  }
-                  .back-link {
-                      display: block;
-                      text-align: center;
-                      margin-top: 30px;
-                      color: #667eea;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <h1>📋 历史报告列表</h1>
-                  <ul class="report-list" id="reportList"></ul>
-                  <a href="../" class="back-link">← 返回首页</a>
-              </div>
-              <script>
-                  // 动态列出所有报告（简化版，实际会显示当前目录的 HTML 文件）
-                  const files = [
-          LISTEOF
+          with open(os.path.join(PUBLIC_DIR, "reports", "index.html"), 'w', encoding='utf-8') as f:
+              f.write(archive_html)
           
-          # 列出所有报告文件
-          for f in $(ls -t ./public/reports/*.html 2>/dev/null | grep -v index.html); do
-            name=$(basename "$f")
-            echo "            '$name'," >> ./public/reports/index.html
-          done
-          
-          cat >> ./public/reports/index.html << 'LISTEOF2'
-                  ];
-                  const list = document.getElementById('reportList');
-                  files.forEach(f => {
-                      if (f) {
-                          const li = document.createElement('li');
-                          li.className = 'report-item';
-                          li.innerHTML = `<a href="./${f}">📄 ${f}</a>`;
-                          list.appendChild(li);
-                      }
-                  });
-                  if (files.length === 0 || (files.length === 1 && files[0] === '')) {
-                      list.innerHTML = '<li class="report-item">暂无报告</li>';
-                  }
-              </script>
-          </body>
-          </html>
-          LISTEOF2
-          
-          echo "📂 Public directory contents:"
-          ls -la ./public/
-          ls -la ./public/reports/
+          print("✅ 生成归档页 reports/index.html")
 
       - name: 🔧 配置 GitHub Pages
         uses: actions/configure-pages@v4
