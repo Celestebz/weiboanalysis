@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-02-08 11:39:15</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">87.9</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        苏翊鸣疑似被日本裁判压分
+                        <span class="heat-badge">🔥  1104229</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年米兰冬奥会单板滑雪大跳台决赛中，苏翊鸣未能卫冕仅获铜牌。比赛中日本裁判多次给苏翊鸣打出最低分，引发网友质疑存在「压分」行为。但苏翊鸣本人赛后回应称「判罚是完全公平的」，展现了大将风度。类似争议在四年前奥运会上也曾发生。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>裁判视角</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI模拟裁判打分系统，用户可对比赛动作进行实时评分</li><li>历史判罚数据库，可视化呈现各裁判打分倾向与偏差</li><li>用户打分与官方分数对比，生成「你的裁判水平」报告</li><li>争议判罚回放与慢动作分析，支持多角度观看</li><li>社区讨论区，用户可发起「民间仲裁」投票</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">体育赛事爱好者、冰雪运动粉丝、对裁判公正性感兴趣的观众、苏翊鸣及单板滑雪运动员粉丝群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        山西山阴车间爆炸已致8死
+                        <span class="heat-badge">🔥  827559</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年2月7日凌晨，山西朔州山阴县佳鹏生物科技有限公司生产车间发生爆炸，已造成8人遇难。该企业成立于2024年6月，投产仅8个月，主营生物饲料研发。事发前企业存在深夜赶工情况，目前法人代表已被控制，事故调查组已成立。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    80分
+                                </div>
+                                <div class="product-header">
+                                    <h3>安全哨兵</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>企业安全风险智能评估：基于工商、环保、投诉等多维数据自动生成风险指数</li><li>周边隐患地图：显示用户3公里内的化工厂、危险品仓库等高风险点位</li><li>异常预警推送：监测企业深夜开工、异味投诉等异常信号并及时提醒</li><li>一键举报通道：整合安监、环保、消防等部门举报入口，支持匿名反馈</li><li>安全知识科普：提供爆炸逃生、有毒气体防护等应急自救指南</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">工业园区周边居民、关注生产安全的普通市民、企业安全管理人员、基层安监工作者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">62/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        冰天雪地藏着高质量发展热引擎
+                        <span class="heat-badge">🔥  647669</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2024年中央经济工作会议明确提出发展「冰雪经济」，黑龙江积极践行习近平总书记「冰天雪地也是金山银山」理念。哈尔滨冰雪旅游持续火爆，从冰雪景观打造到521米冰滑梯等创新体验，冰雪产业正成为东北高质量发展的新引擎。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冰雪造梦师</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR实景探秘冰雕制作全过程，解锁「冰雪筑梦师」幕后故事</li><li>冰雪景点实时热度地图，智能规划最佳游玩路线避开人潮</li><li>虚拟冰滑梯体验，用手机陀螺仪模拟521米极速下滑快感</li><li>冰雪打卡成就系统，集齐徽章兑换当地特色伴手礼</li><li>UGC冰雪创意工坊，用户可设计虚拟冰雕并投票上榜</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁热爱旅行打卡的年轻人、计划前往东北冰雪游的游客、对冰雪文化感兴趣的内容消费者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        谢依霖回应提问赵丽颖
+                        <span class="heat-badge">🔥  564311</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，谢依霖在综艺《主咖和TA的朋友们》中回应了2015年颁奖礼上向赵丽颖提问「吻戏感受」等尴尬问题引发的争议。她解释称大型颁奖典礼都有严格脚本和彩排流程，主持人需按规定执行，并非即兴发挥，这番回应也揭开了内娱颁奖礼「伪即兴」的行业真相。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>「话术拆解器」——明星高情商回应学习平台</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>经典名场面话术库：收录明星化解尴尬、高情商回应的视频片段与文字拆解</li><li>AI话术模拟器：输入尴尬场景，生成多种风格的机智回应供用户学习</li><li>「如果是你」互动挑战：用户扮演明星角色，限时回应刁钻问题并获得评分</li><li>社交场景分类训练：职场、相亲、家庭聚会等不同场景的应对话术专项练习</li><li>话术段位排行榜：根据用户回应的机智程度评定「青铜到王者」段位</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁职场新人、社恐人群、对社交表达有提升需求的年轻用户，以及喜欢娱乐八卦的吃瓜群众</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        韩员工手滑发62万枚比特币
+                        <span class="heat-badge">🔥  387253</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                韩国第二大加密货币交易所Bithumb在一次促销活动奖励发放中出现重大操作失误，员工「手滑」误向用户发放了62万枚比特币，按当时价格计算价值超440亿美元（约3056亿人民币）。所幸交易所已追回99.7%的误发资产，堪称币圈史上最大「乌龙指」事件。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    84分
+                                </div>
+                                <div class="product-header">
+                                    <h3>乌龙指模拟器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>模拟各行业经典「手滑」事故场景，体验操作失误的惊心动魄</li><li>实时计算你的「乌龙」造成的虚拟损失金额并生成排行榜</li><li>「反应力挑战」模式：在倒计时内发现并阻止即将发生的操作失误</li><li>历史著名乌龙事件博物馆：收录金融、航空、医疗等领域真实案例</li><li>生成个人「手滑指数」报告并分享到社交平台</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对金融科技感兴趣的年轻用户、币圈爱好者、喜欢猎奇新闻的社交媒体活跃用户、职场打工人（用于自嘲解压）</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">12/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        爱吃柚子的人天塌了
+                        <span class="heat-badge">🔥  370065</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                微博热搜「爱吃柚子的人天塌了」引发网友热议，疑似与柚子相关的健康风险或食用禁忌被曝光。柚子虽营养丰富，但与某些药物同服可能产生严重副作用，尤其是降压药、降脂药等，可能导致药物浓度异常升高，引发健康风险。这一话题让众多柚子爱好者感到「天塌了」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    83分
+                                </div>
+                                <div class="product-header">
+                                    <h3>柚安心</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>药物冲突检测：输入正在服用的药物，一键查询能否安全吃柚子</li><li>水果禁忌百科：收录各类水果与药物、疾病的相克关系</li><li>个人健康档案：记录用药情况，智能提醒饮食禁忌</li><li>扫码识药：扫描药盒即可获取该药物的饮食注意事项</li><li>社区问答：医师在线解答水果与健康的疑惑</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">长期服药人群（高血压、高血脂、心脏病患者）、中老年养生群体、关注健康饮食的年轻人、家有慢性病患者的家庭成员</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">65/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        扫走旧情绪新年马上有米
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                「扫走旧情绪新年马上有米」源于中国传统年俗「除故纳新」，即在除夕前彻底清扫屋舍、丢弃旧物，以驱除晦气、迎接新年吉祥。这一习俗又称「扫年」「掸尘」，寓意辞旧迎新、纳福迎祥。如今该话题将传统习俗与现代情绪管理结合，倡导人们在新年到来之际清扫负面情绪，迎接好运与财富。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>扫情绪·攒米粒</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>情绪垃圾桶：写下烦心事后用手指「扫」进虚拟垃圾桶，配合解压音效和粉碎动画</li><li>米缸养成：每扫掉一个负面情绪，米缸自动掉落金色米粒，集满可兑换新年红包封面</li><li>情绪扫把DIY：用AR扫把在现实空间「扫除」虚拟负能量小怪兽</li><li>好运签筒：扫完情绪后摇出新年好运签，可生成精美分享卡片</li><li>情绪年报：生成年度情绪清扫报告，展示你「扫走」了多少负能量、攒了多少米</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁年轻人群，尤其是职场打工人、学生党，有年末焦虑或情绪压力，喜欢参与新年仪式感活动的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">75/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">15/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        苏翊鸣说不用再去承担卫冕冠军的压力
+                        <span class="heat-badge">🔥  285595</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年米兰冬奥会单板滑雪男子大跳台比赛中，苏翊鸣获得铜牌。赛后他表示已倾尽全力、毫无保留地拼搏，不言遗憾。他坦言「终于不用再背负卫冕冠军的压力」，可以以全新挑战者身份面对未来，这种心态转变被他视为比金牌更珍贵的礼物。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>卸压舱</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>匿名压力倾诉墙：用户可匿名写下正在承受的压力并「放飞」</li><li>压力转化器：AI将用户的压力故事改写成励志漫画或搞笑段子</li><li>身份切换挑战：模拟从「卫冕者」到「挑战者」的心态转变游戏</li><li>压力共鸣社区：查看他人相似压力故事，发现「原来不止我一个人」</li><li>解压成就系统：记录每次成功释放压力的时刻，生成个人「卸压勋章」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁面临学业、职场、生活压力的年轻人，尤其是曾取得成绩后害怕失败的「高期待焦虑」群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        米兰大跳台 摔了好多人
+                        <span class="heat-badge">🔥  181933</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                米兰冬奥会单板滑雪大跳台比赛成为「事故高发区」，多名顶尖选手在挑战高难度动作时频繁摔倒。日本选手荻原大翔三跳全部失败被担架抬离，英国、新西兰选手挑战1980度动作时坠地退赛，苏翊鸣也在预赛中摔倒。主要原因是运动员挑战五周半转体等极限难度动作，技术执行风险极高。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>跳台风险预警官</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时动作难度系数可视化解读</li><li>选手历史摔倒数据与伤病档案查询</li><li>AI预测本轮动作成功概率</li><li>慢动作回放+专业解说弹幕</li><li>观众「心跳指数」互动投票</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">冬奥会观众、极限运动爱好者、体育赛事解说从业者、运动医学研究者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        韩员工误发超400亿美元比特币
+                        <span class="heat-badge">🔥  177482</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2月7日，韩国第二大加密货币交易所Bithumb发生重大操作失误。一名员工在发放活动奖励时，将原本62万「韩元」（约424美元）的奖金单位错误输入为「比特币」，导致向695名用户误发了62万枚比特币，总价值超400亿美元。部分用户收到后迅速抛售变现并提款跑路。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>乌龙指防护卫士</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>智能单位识别：自动检测金额单位异常并预警</li><li>多重确认机制：大额操作需多人审批和二次验证</li><li>历史操作对比：与同类操作数据对比发现异常偏差</li><li>实时风控拦截：超出阈值自动冻结并通知管理员</li><li>乌龙案例库：收录全球金融乌龙事件供学习警示</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">加密货币交易所运营人员、金融机构后台操作员、企业财务人员、对金融风控感兴趣的从业者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">SaaS网页端+企业微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        泡泡玛特年会跳那么开心我也有责任
+                        <span class="heat-badge">🔥  170410</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年2月，泡泡玛特年会因豪华阵容引爆社交平台：创始人王宁表演咏春拳开场，沈腾、李诞等明星助阵，销冠IP「星星人」跳憨萌舞蹈。消费者纷纷自嘲「他们年会跳那么开心我也有责任」，以玩梗方式表达对自己「情绪消费」的调侃，折射出年轻人既享受又自省的矛盾消费心理。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    94分
+                                </div>
+                                <div class="product-header">
+                                    <h3>韭菜贡献榜</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>消费自嘲生成器：输入消费记录自动生成搞笑「贡献证书」</li><li>品牌年会监控：追踪各大品牌年会豪华程度并关联用户消费数据</li><li>韭菜段位系统：根据消费金额解锁「青铜韭菜」到「王者韭菜」称号</li><li>自嘲表情包工厂：一键生成「我养活了XX品牌」系列表情包</li><li>理性消费打卡：设置消费预算目标并记录「戒断」天数</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁热衷潮玩、盲盒、奶茶等情绪消费的年轻人，喜欢自嘲式幽默，活跃于社交平台</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">78/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        中国元素绽放米兰冬奥舞台
+                        <span class="heat-badge">🔥  168983</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026米兰冬奥会开幕式上，中国元素大放异彩。宁忠岩、张楚桐高举五星红旗引领中国代表团入场，「中国红」点亮现场。郎朗时隔18年再登奥运开幕式舞台，与意大利艺术家联袂演奏《奥林匹克颂》，中西旋律交融。苏翊鸣等中国选手也将向金牌发起冲击。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冰雪中国风</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR识别冬奥中国元素并生成专属打卡海报</li><li>中国冬奥选手实时赛程追踪与加油弹幕墙</li><li>冬奥中国风表情包与头像框DIY工具</li><li>郎朗冬奥演奏片段混剪与音乐铃声下载</li><li>冬奥知识问答闯关赢周边抽奖</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注冬奥会的年轻体育迷、喜欢中国传统文化元素的Z世代用户、郎朗及中国冬奥选手粉丝群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        千问
+                        <span class="heat-badge">🔥  168652</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年春节前，阿里旗下AI产品「千问」推出30亿免单活动，以25元无门槛券吸引用户。活动上线3小时订单破百万，5小时登顶App Store免费榜，但也遭遇系统崩溃。这场AI春节大战折射出AI产品落地推广的机遇与困境。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>AI补贴雷达</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时追踪各大AI产品的补贴活动和免单福利</li><li>智能比价分析哪家AI产品「薅羊毛」性价比最高</li><li>活动预警推送避免错过限时福利</li><li>用户晒单社区分享成功领取经验和避坑指南</li><li>AI产品功能横评帮用户选择最适合的工具</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注AI产品动态的科技爱好者、喜欢薅羊毛的精打细算用户、想尝试AI工具但不知从何下手的普通用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        王俊凯的话只有朱志鑫听进去了
+                        <span class="heat-badge">🔥  166847</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日王俊凯现身时代少年团后台，与朱志鑫、张泽禹等五位少年合影，照片中王俊凯站C位，少年们围绕两侧笑容青涩。这一「养成系前辈探班后辈」的温馨画面引发热议，网友发现朱志鑫似乎格外认真聆听王俊凯的建议，由此诞生热搜话题「王俊凯的话只有朱志鑫听进去了」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>偶像传承语录馆</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>前辈金句收录：整理顶流偶像对后辈的公开建议与寄语</li><li>传承关系图谱：可视化展示娱乐圈师徒、前后辈互动脉络</li><li>语录匹配测试：测测哪位前辈的话最适合现在的你</li><li>成长对比时间轴：同龄段偶像的状态对比与成长轨迹</li><li>粉丝共创笔记：用户可补充偶像间的暖心互动故事</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">追星女孩、养成系偶像粉丝、对娱乐圈代际传承感兴趣的年轻用户（18-28岁为主）</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        沈腾回应参加泡泡玛特年会
+                        <span class="heat-badge">🔥  165482</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年2月7日，沈腾作为神秘嘉宾现身泡泡玛特年会，以休闲装扮自称「刚吃完盒饭」拉近与员工距离。当创始人王宁宣布抽奖送《飞驰人生3》电影票时，沈腾即兴调侃引发「点心梗」爆笑全场。沈腾表示「心甘情愿为王宁站场」，李诞、五条人等明星也同台互动，被网友称为「年会不能停」现实版。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    91分
+                                </div>
+                                <div class="product-header">
+                                    <h3>年会大咖生成器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI生成虚拟明星空降你的年会视频</li><li>一键生成明星风格的即兴调侃金句</li><li>模拟抽奖环节的爆梗互动剧本</li><li>支持上传公司年会照片合成明星同框</li><li>生成专属企业的「点心梗」式幽默台词</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">企业HR、行政人员、年会策划者、中小企业老板、想让年会更有趣的打工人</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">75/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
