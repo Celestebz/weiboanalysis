@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-02-18 11:22:47</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">88.1</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        B站春晚 夯
+                        <span class="heat-badge">🔥 晚会 1055943</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                B站UP主@方山厨子发起的第二届《大学生春晚》在B站播出并走红，节目以「夯」（网络流行语，意为猛、厉害）的风格吸引关注。节目内容大胆揭露大学校园APP广告泛滥等问题，让「校长」被学生当众批评，以抽象幽默的方式引发共鸣，展现了年轻一代独特的创作力和表达方式。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    92分
+                                </div>
+                                <div class="product-header">
+                                    <h3>夯春晚——全民UGC春晚创作平台</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>春晚节目众创：用户可组队创作小品、相声、歌舞等节目并投稿</li><li>「吐槽大会」专区：针对校园、职场、社会热点话题进行创意吐槽表演</li><li>AI剧本助手：输入吐槽主题，自动生成搞笑剧本框架和金句</li><li>弹幕互动投票：观众实时投票选出「最夯节目」「最敢说奖」等</li><li>地域春晚频道：按城市、高校、公司分类，打造专属「民间春晚」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁的Z世代年轻人，尤其是大学生、职场新人，热衷二次元文化、喜欢用幽默方式表达观点、有创作欲望的B站核心用户群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + B站官方合作频道</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">78/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        中国速滑男团0.09秒绝杀
+                        <span class="heat-badge">🔥  742380</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年2月17日米兰冬奥会，由刘瀚彬、吴宇、李文淏组成的中国速度滑冰男团，在团体追逐铜牌赛中以3分41秒38的成绩，仅0.09秒的微弱优势绝杀老牌劲旅荷兰队，创造历史——这是中国队首次在该项目登上冬奥领奖台。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>毫秒英雄</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时比赛模拟器：用户可体验0.01秒级别的竞速紧张感</li><li>团队追逐战术推演：学习领滑换位等专业战术知识</li><li>历史名场面回放：以第一视角重温经典绝杀瞬间</li><li>虚拟组队挑战：邀请好友组建三人战队进行线上对抗</li><li>冬奥知识问答：答题赢取虚拟奖牌和运动员语音祝福</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对冬奥会感兴趣的年轻群体、速度滑冰爱好者、喜欢竞技类小游戏的用户、希望了解冰雪运动的家长和孩子</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        2026新春走基层
+                        <span class="heat-badge">🔥  729653</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                「新春走基层」是中国媒体的传统报道活动，记者深入一线采访普通劳动者的春节故事。2026年春节期间，各大媒体聚焦医护人员除夕坚守手术台、矿工地下作业、智慧长江建设等场景，以小切口展现时代变迁，用真实故事传递温暖与力量。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>基层故事馆</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR实景探访：足不出户「走进」矿井、手术室、工地等真实场景</li><li>声音明信片：录制祝福语，系统匹配发送给正在值班的基层工作者</li><li>职业体验小游戏：模拟医生接诊、矿工作业等，感受基层工作不易</li><li>故事接龙共创：用户续写或补充基层工作者的温暖瞬间</li><li>敬意排行榜：为不同职业投票，生成「最想感谢的职业」年度榜单</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-45岁城市白领及学生群体，对社会民生有关注热情，希望了解基层真实生活并表达敬意的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        过年上淘宝闪购抢电影奶茶免单
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年春节前夕，阿里旗下AI助手「千问」推出「春节30亿大免单」活动，用户只需在App对话框输入「帮我买奶茶」，即可1分钱喝到25元奶茶。活动上线9小时订单量突破1000万单，大量用户涌入导致系统一度崩溃，奶茶店也被「干崩」，AI正成为新的消费入口。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>薅神雷达</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>全网AI免单活动实时聚合，一键查看当日可薅羊毛清单</li><li>智能提醒订阅：设置关注品类后，新免单活动秒级推送</li><li>「薅前必读」攻略：自动生成每个活动的最优参与路径和话术</li><li>战绩晒单社区：分享薅到的免单截图，解锁「薅神」成就徽章</li><li>AI助手接入比价：一句话对比各平台同类免单活动性价比</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">热衷参与各类优惠活动的年轻消费者、羊毛党群体、对AI应用好奇但不知如何上手的用户、以及追求性价比的学生和上班族</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        丞磊真的读了与妻书
+                        <span class="heat-badge">🔥 剧集 728876</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                演员丞磊在某作品中深情朗读了林觉民的《与妻书》，其声音演绎获得网友高度评价。丞磊通过声线层次的变化，将角色的人格撕裂感表现得淋漓尽致，低沉沙哑与清亮少年音的切换令听众产生强烈共情，引发热议。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>声临其境·经典诵读挑战</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI声纹分析：检测用户朗读的情感层次与声线变化</li><li>经典篇目库：收录《与妻书》等百篇经典文学作品</li><li>明星范本对比：提供丞磊等演员的朗读示范音频</li><li>情感曲线可视化：将朗读的情绪起伏生成动态图谱</li><li>社区PK榜：用户上传作品参与投票和排名挑战</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁热爱文学、配音、声音表演的年轻用户，以及语文教师、播音主持专业学生</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        日本要当冤大头了
+                        <span class="heat-badge">🔥  728853</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                特朗普宣布启动日本承诺的5500亿美元对美投资计划，首批资金已到位。三大项目包括德州液化天然气接收站、俄亥俄州天然气发电厂和佐治亚州关键矿物设施，均为美国本土基建。外界质疑这是单向「提款」而非双赢合作，日本被戏称为「冤大头」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冤大头计算器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>输入国际协议金额，自动换算成「人均被薅羊毛」数值</li><li>生成「冤大头指数」排行榜，对比各国对美投资性价比</li><li>AI模拟谈判场景，测试你能否避免成为冤大头</li><li>历史著名「不平等协议」趣味科普卡片</li><li>一键生成「今日冤大头认证」表情包分享朋友圈</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注国际时事的年轻网民、财经爱好者、喜欢玩梗和吐槽的社交媒体用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        大年初二不能做哪些事
+                        <span class="heat-badge">🔥  728840</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                大年初二是中国传统「回娘家」的日子，也被称为「迎婿日」。民俗讲究颇多：拜年需在中午前完成，寓意「开门迎福」；穿着不宜暴露艳丽或穿旧鞋破履，以示对娘家尊重；还有「不洗」「不动」等诸多忌讳需遵守，以求新年安稳吉祥。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>年俗闯关</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>趣味问答闯关：将各地初一到十五的年俗禁忌做成答题游戏，答错会有搞笑「翻车」动画</li><li>地域年俗地图：展示全国各地不同的春节习俗差异，点击省份解锁当地独特讲究</li><li>AI年俗顾问：输入具体场景（如初二穿什么衣服），AI给出趣味又实用的建议</li><li>禁忌日历提醒：每日推送当天的年俗宜忌，配合可爱插画和方言语音播报</li><li>晒晒我家年俗：用户上传自家独特年俗，形成UGC内容社区互相「涨姿势」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">20-40岁年轻人群体，尤其是新婚夫妻、在外工作返乡过年者、对传统文化感兴趣但了解不深的都市青年</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        施华蔻让李一桐爸妈美回当年
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                施华蔻携手演员李一桐推出2026新春短片，通过李一桐亲手为父母染发、造型的温情画面，回溯父母曾为子女重要时刻「盛装出席」的记忆，传递「让美重新到场」的品牌理念，以「给爸妈换头我是认真的」为话题引发网友亲情共鸣，纷纷分享关于父母的感人故事。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    89分
+                                </div>
+                                <div class="product-header">
+                                    <h3>时光发型馆</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>上传父母老照片，AI识别并复刻当年发型造型</li><li>虚拟试色功能，一键预览父母染发后效果</li><li>生成「爸妈年轻时VS现在」对比视频模板</li><li>亲情故事录音墙，记录为父母做造型时的对话</li><li>附近染发门店预约及子女陪同优惠券领取</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-40岁已工作的年轻人群体，尤其是想在节日为父母送上仪式感礼物、希望帮父母重拾年轻状态的孝心子女</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        谷爱凌才是货真价实的夯爆了
+                        <span class="heat-badge">🔥  413020</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                谷爱凌，2003年出生于美国，母亲谷燕是中国滑雪运动员。她9岁起展现滑雪天赋，15岁已斩获多项冠军。曾因严重脑震荡险些「醒不过来」，但凭借顽强意志康复并重返赛场，滑出「历史最好成绩」。近期因其双重国籍身份引发争议，但其实力与拼搏精神被网友称为「货真价实的夯爆了」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冠军日程表</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>导入谷爱凌等顶级运动员的真实作息时间表供参考</li><li>AI生成个性化「冠军级」日程规划，平衡学习、运动与休息</li><li>睡眠质量追踪与提醒，学习谷爱凌的「充足睡眠哲学」</li><li>每日打卡挑战，完成任务解锁运动员励志故事卡片</li><li>社区分享功能，与其他用户比拼「自律指数」排行榜</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">12-25岁追求自我提升的学生群体，尤其是对运动员生活方式感兴趣、希望提升时间管理能力和自律性的年轻人</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        镖人口碑
+                        <span class="heat-badge">🔥 电影 251637</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                《镖人》是一部以隋末大业三年为背景的国产漫画作品，讲述镖客刀马护送反隋领袖「知世郎」前往长安的故事。作品融合了古代镖局文化与江湖恩怨，刀马一路遭遇朝廷杀手、江湖狠人的追杀，展现了乱世中小人物的侠义与挣扎，口碑持续发酵引发热议。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>镖路江湖</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI生成个人专属「镖单」任务，将日常目标转化为护镖挑战</li><li>隋末乱世地图探索，解锁历史典故与隐藏剧情</li><li>「江湖声望」系统，完成任务积累镖客等级与称号</li><li>好友组队「走镖」，多人协作完成高难度挑战</li><li>每日「悬赏榜」推送，用游戏化方式培养习惯养成</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁国漫爱好者、历史文化兴趣者、喜欢游戏化自我管理的年轻用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        回老家后根本没有穿衣焦虑
+                        <span class="heat-badge">🔥  231280</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                微博热搜「回老家后根本没有穿衣焦虑」引发网友共鸣，话题讨论的是年轻人在大城市时常为穿搭发愁，但一回到老家就完全放飞自我，随便穿什么都无所谓。这种「城市精致vs老家躺平」的反差感戳中了无数打工人的心，大家纷纷晒出自己回老家后的「邋遢」穿搭。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    84分
+                                </div>
+                                <div class="product-header">
+                                    <h3>衣柜双城记</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>上传两张照片自动生成「城市版vs老家版」穿搭对比卡片</li><li>AI识别穿搭风格并生成搞笑点评文案</li><li>老家躺平穿搭大赛排行榜，投票选出「最接地气穿搭」</li><li>生成专属「穿衣焦虑指数」报告，分析你在不同场景的穿搭心态</li><li>一键分享朋友圈模板，配文「这是同一个人」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁在外打工、求学的年轻人，尤其是从小城市或农村来到大城市生活的群体，有强烈的身份认同和情感共鸣需求</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">12/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        刘诗诗 美人落泪
+                        <span class="heat-badge">🔥 电影 224515</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                刘诗诗，1987年生于北京，6岁学习芭蕾舞，2002年考入北京舞蹈学院。她在唐人影视深耕十年，近日在领奖台上感恩老板蔡艺侬，动情落泪表示「没有她就没有今天的自己」，真挚情感令观众心疼，展现了她温婉坚韧的一面。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>泪光时刻</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI情绪识别捕捉影视剧中明星落泪名场面并自动剪辑</li><li>用户可上传照片生成「美人落泪」艺术风格滤镜</li><li>经典哭戏演技投票排行榜与专业点评</li><li>明星成长故事时间轴展示感恩与奋斗历程</li><li>一键生成「致敬恩师」感恩海报分享朋友圈</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18至35岁追星群体、影视剧爱好者、喜欢明星八卦与情感内容的年轻女性用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        高市早苗内阁集体辞职
+                        <span class="heat-badge">🔥  196976</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年2月18日，日本首相高市早苗率内阁集体辞职，这并非政坛动荡，而是日本宪法第70条规定的必走程序。在新一届国会召开前，现任内阁需依法总辞职，随后将进行首相选举。高市早苗预计将再次当选，其获得约九成年轻选民支持，美国总统特朗普也公开表态支持。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>政坛剧本杀</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>各国政治制度「冷知识」趣味问答闯关</li><li>模拟各国领导人「宪法规定动作」角色扮演</li><li>政治事件「真相or误解」实时竞猜游戏</li><li>全球政坛「程序性辞职vs真辞职」对比图鉴</li><li>用户自制「如果我是首相」24小时日程挑战</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对国际政治感兴趣但觉得新闻太枯燥的18-35岁年轻人，喜欢通过游戏化方式学习新知识的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        肖战这和演唱会现场有什么区别
+                        <span class="heat-badge">🔥 晚会 158181</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                肖战在北京台春晚演唱《岁岁年年》时，观众自发大合唱并亮起红海应援灯牌，现场氛围堪比演唱会。此前跨年夜他在梅赛德斯中心表演时，8秒内上万红色灯牌点亮全场，还曾惊喜现身李健演唱会引发尖叫。这种「双向奔赴」的互动场面屡次出圈，被粉丝称为「限定版演唱会」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>应援造浪器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时灯海模拟：手机屏幕变应援灯牌，支持自定义颜色和闪烁节奏</li><li>万人同步功能：同一场活动的用户手机灯光可通过音频识别实现全场同步</li><li>合唱接力模式：检测歌曲播放自动显示歌词，引导用户加入大合唱</li><li>应援氛围回放：用AR技术还原经典红海名场面，让未到场粉丝也能「沉浸式补票」</li><li>双向奔赴时刻：记录并生成个人专属的「追星高光时刻」视频</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">追星族及演唱会爱好者，尤其是无法亲临现场但渴望参与应援互动的粉丝群体，以及喜欢收藏追星回忆的年轻用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        李子柒在春晚后台手搓非遗饰品
+                        <span class="heat-badge">🔥 晚会 143376</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年马年春晚期间，李子柒现身四川宜宾分会场表演节目《立上游》，身穿红衣亮相。在后台候场间隙，她被镜头捕捉到即兴手工改造非遗绒花耳饰的画面，指尖翻飞展现传统技艺与现代审美的融合，生动诠释了她一贯倡导的「非遗生活化」理念，迅速引发全网热议。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>指尖非遗</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR手工教学：通过手机摄像头实时识别用户手部动作，AI导师逐步指导绒花、编织等非遗技艺制作</li><li>非遗盲盒材料包：每月寄送一款神秘非遗手作材料包，配合App解锁对应教程</li><li>作品社区与PK赛：用户上传成品照片，参与每周主题挑战赛，获得「非遗传承人」虚拟勋章</li><li>大师直播间：邀请李子柒等手艺人不定期直播教学，用户可连麦求指导</li><li>非遗地图探索：基于LBS发现身边的非遗工坊、体验馆，线下打卡解锁城市限定徽章</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁对传统文化感兴趣的年轻女性用户，喜欢手作、追求生活仪式感，热衷在社交平台分享手工成果</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + 实体材料包订阅服务</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
