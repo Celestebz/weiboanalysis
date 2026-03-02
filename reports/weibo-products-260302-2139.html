@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-03-02 21:39:32</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0.0</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        王毅和伊朗外长通电话
+                        <span class="heat-badge">🔥  1590272</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 王毅同伊朗外长阿拉格齐通电话:  2026年3月2日,中共中央政治局委员、外交部长王毅应约同伊朗外长阿拉格齐通电话。 阿拉格齐通报了地区局势最新情况,表示美国第二次在伊美谈判期间对伊发动战争。双方本次谈判已取得积极进展,但美方的行为...<br>- 王毅同伊朗外长阿拉格齐通电话:  2026年1月15日,中共中央政治局委员、外交部长王毅同伊朗外长阿拉格齐通电话。 阿拉格齐通报了伊朗局势最新进展,强调伊近期骚乱系外部势力煽动所致,目前已恢复平稳。伊方已作好应对外部干涉准备,同时对...<br>- 王毅同伊朗外长阿拉格齐通电话:  2025年6月14日,中共中央政治局委员、外交部长王毅同伊朗外长阿拉格齐通电话。 阿拉格齐通报了地区局势的最新情况,表示以色列日前悍然袭击伊朗,造成伊方军事人员和平民伤亡,尤其是袭击伊朗核设施,严重...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        海澜之家 不签合同
+                        <span class="heat-badge">🔥  892055</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 海澜之家军采违约事件:国民品牌的危机与转型困局: 国民男装品牌海澜之家(股票代码:600398.SH)因“中标后无正当理由拒不签订合同”,被联勤保障部队采购管理部门暂停全军物资工程服务采购资格,其法定代表人周立宸及授权代表贡伟宇也受到连带处理。 这一...<br>- 中标后无正当理由拒不签订合同 海澜之家被暂停全军采购资格 :  近日,军队采购网发布一则关于对海澜之家集团股份有限公司暂停处理公告概要,海澜之家集团股份有限公司因在采购活动中违规,被联勤保障部队采购管理部门处以暂停参加全军物资工程服务采购活动资格的处罚。 公告显...<br>- 海澜之家,被暂停全军采购资格!因“中标后无正当理由拒不签订合同”:  近日,军队采购网发布一则违规处理公告,知名服饰企业海澜之家集团股份有限公司因在采购活动中违规,被联勤保障部队采购管理部门处以暂停全军采购活动资格的处罚。 公告显示,海澜之家集团股份有限公司(统一社会...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        十四届全国人大四次会议发布会
+                        <span class="heat-badge">🔥  707130</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 中华人民共和国第十四届全国人民代表大会第四次会议:  2025年12月15日,十四届全国人大常委会第五十六次委员长会议在北京人民大会堂举行。委员长会议建议,十四届全国人大常委会第十九次会议审议关于提请审议全国人大常委会关于召开第十四届全国人民代表大会第...<br>- 2026年云南省两会新闻发布会第二场:云南省第十四届人民代表大会第四次会议新闻发布会:  云南省人大常委会党组成员、副秘书长、新闻发言人李志明先生; 云南省人大常委会副秘书长、办公厅主任尹显红先生; 云南省人大常委会代表工作委员会主任李兴华先生; 云南省人大常委会法制工作委员会主任张凌先...<br>- 早知天下事: 十四届全国人大常委会第十九次会议27日上午在北京人民大会堂闭幕.会议经表决,通过了新修订的渔业法,危险化学品安全法,新修订的民用航空法,新修订的国家通用语言文字法,新修订的对外贸易法,关于批准全国人大...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        伊朗导弹击中美第五舰队总部瞬间
+                        <span class="heat-badge">🔥  663195</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 美军第五舰队总部被炸!30多年来首次遇袭,熊熊烈火冲天——巴林首都空袭警报响起,伊朗导弹“偷家”成功:  看这件事,大家就明白这场大乱有多严重了:今天大致我们这里下午到傍晚时间,海湾小国巴林首都上空,刚响起凄厉的空袭警报声不久,空中就落下一条火光,之后爆炸生出的浓烟升起,并越升越高,紧接着传来了惊天动地...<br>- 90分钟就开始反击!美海军第五舰队总部遭伊朗导弹命中,情况如何:  北京时间28日下午2时30分许、伊朗德黑兰时间上午10时许,美、以两国联军对伊朗发起大规模空中进攻,“战斧”式巡航导弹飞向伊朗本土,F-15I、F-16I战斗机飞越叙利亚和伊拉克领空,冲突至此全面爆...<br>- 伊朗导弹命中美海军第五舰队总部,90分钟内展开反击: 前几天,美国和以色列的联军,出动了好几百架次的飞机,对伊朗本土发动了空袭。他们为啥要打?目的很明确,就是想用强大的武力震慑伊朗,打击伊朗的重要军事目标,甚至可能想除掉伊朗的领导人。这是他们惯用的手法,...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        中方回应特朗普3月访华能否成行
+                        <span class="heat-badge">🔥  485855</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 特朗普3月访华能否成行?外交部:中美就元首互动保持着沟通: 从中方角度看,这次访问是否能成行呢?对此,毛宁表示:“中美就两国元首互动,保持着沟通,你的具体问题我目前没有可以提供的信息。”...<br>- 特朗普3月访华能否成行?外交部:中美就元首互动保持着沟通:  对此,毛宁表示:“中美就两国元首互动,保持着沟通,你的具体问题我目前没有可以提供的信息。”...<br>- 特朗普3月访华能否成行?外交部:中美就元首互动保持着沟通:  对此,毛宁表示:“中美就两国元首互动,保持着沟通,你的具体问题我目前没有可以提供的信息。”...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        刘文祥麻辣烫
+                        <span class="heat-badge">🔥  433045</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- “紫薯精”带火刘文祥麻辣烫,连配料都断货,门店回应爆火:  近日,短视频创作者周小闹在《饭店寒假工》系列中塑造的爆款角色“紫薯精",因魔性台词“如果全世界都指责你,我就带你去吃刘文祥”意外带火连锁麻辣烫品牌"刘文祥",引发全网玩梗狂潮和线下消费热潮。据公开信...<br>- 刘文祥麻辣烫上海门店‘抹布事件’的具体经过和后续处理结果是什么?:  一、事件经过:从误食到维权僵局 2025年10月28日中午,上海一名消费者通过外卖平台订购了刘文祥麻辣烫爱琴海店的餐品。用餐时,其同事从餐碗中夹出一块白色块状物,因浸泡红油后形似毛肚,起初未被察觉异...<br>- 10·28上海麻辣烫吃出抹布事件:  10·28上海麻辣烫吃出抹布事件,系2025年10月28日发生于上海刘文祥麻辣烫(爱琴海店)的食品安全事件。 当日消费者通过外卖平台订购餐食后,在麻辣烫汤底发现整块白色湿抹布,并于12时15分向商家...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        孙颖莎晒和王曼昱合照
+                        <span class="heat-badge">🔥  317533</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 孙颖莎王曼昱合照风波:顶级较量中的团队之光:  #伊朗6名中情局官员身亡#镜头之外的真相:从"对手"到"队友"的切换 澳门冠军赛卫冕成功后,孙颖莎晒出与王曼昱的合影配文道:"和曼昱的决赛一如既往地激烈和酣畅。"这句话揭开了顶级运动员的生存常态:场...<br>- 孙颖莎王曼昱合照风波背后:顶级运动员的较量与相惜: 但细心的观众发现,在澳门冠军赛和欧洲大满贯的赛场上,孙颖莎两次主动晒出与王曼昱肩并肩的合照,配文中"始终彼此信任""毫无保留地展现最好状态"等表述,远比刻意摆拍的微笑更有说服力。 这种看似矛盾的画面,...<br>- 和孙颖莎不和?王曼昱晒合照没孙颖莎,赛场细节见人品,谁注意王曼昱合影的举动:  北京时间2月12日,海口亚洲杯落幕没几天,国乒名将王曼昱在个人社交平台晒出了一组赛事期间的合影,照片里陈幸同、陈熠等队友悉数出镜,大家笑容灿烂、状态松弛,看起来相处十分融洽。 可就是这张普通的合影,...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        20后都避开网红名了吗
+                        <span class="heat-badge">🔥  282498</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 20后宝宝都避开网红名了吗?: 20后宝宝都避开网红名了吗? 20后宝宝都避开网红名了吗?...<br>- 2024网红快速消亡史:  一是他的这首成名作《诺言》极有可能没有获得原作版权,有极高的法律风险; 二是菏泽南站发布了公告,称“鉴于5-7月考试比较集中,为营造良好环境,菏泽南站将不再举办各类文娱活动。”所以郭有才的直播场地也...<br>- 盘点已经消失在公众视野的十大网红,你还认识几个?:  1. 李子柒:田园牧歌的戛然而止 以古风美食视频风靡全球的李子柒,曾被誉为“东方田园诗人”。她镜头下的乡村生活如诗如画,吸引海内外超亿粉丝,甚至被写入小学语文试卷。她不仅仅在国内拥有千万粉丝,在外网...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        海澜之家被暂停全军采购资格
+                        <span class="heat-badge">🔥  269229</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- “海澜之家”被暂停全军采购资格,原因公布!公司法定代表人一同被处理:  近日,军队采购网发布一则违规处理公告,知名服饰企业海澜之家集团股份有限公司因在采购活动中违规,被联勤保障部队采购管理部门处以暂停全军采购活动资格的处罚。 公告显示,海澜之家集团股份有限公司(统一社会...<br>- 突发!海澜之家被禁止参加全军采购,背后原因让人唏嘘: 海澜之家集团股份有限公司因在采购活动中违规,被联勤保障部队采购管理部门重罚:暂停全军采购活动资格。 这意味着,从2026年2月27日起,海澜之家将彻底失去来自全军(含各军兵种及武警部队)的所有物资工程...<br>- 中标后无正当理由拒不签订合同 海澜之家被暂停全军采购资格 :  近日,军队采购网发布一则关于对海澜之家集团股份有限公司暂停处理公告概要,海澜之家集团股份有限公司因在采购活动中违规,被联勤保障部队采购管理部门处以暂停参加全军物资工程服务采购活动资格的处罚。 公告显...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        王毅同伊朗外长通话
+                        <span class="heat-badge">🔥  269142</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 王毅同伊朗外长阿拉格齐通电话:  2026年3月2日,中共中央政治局委员、外交部长王毅应约同伊朗外长阿拉格齐通电话。 阿拉格齐通报了地区局势最新情况,表示美国第二次在伊美谈判期间对伊发动战争。双方本次谈判已取得积极进展,但美方的行为...<br>- 王毅同伊朗外长阿拉格齐通电话:  2026年1月15日,中共中央政治局委员、外交部长王毅同伊朗外长阿拉格齐通电话。 阿拉格齐通报了伊朗局势最新进展,强调伊近期骚乱系外部势力煽动所致,目前已恢复平稳。伊方已作好应对外部干涉准备,同时对...<br>- 王毅同伊朗外长阿拉格齐通电话:  2025年6月14日,中共中央政治局委员、外交部长王毅同伊朗外长阿拉格齐通电话。 阿拉格齐通报了地区局势的最新情况,表示以色列日前悍然袭击伊朗,造成伊方军事人员和平民伤亡,尤其是袭击伊朗核设施,严重...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        伊朗一名中国公民遇难
+                        <span class="heat-badge">🔥  263062</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 樊京辉:  樊京辉(1965年3月18日-2015年11月18日),男,回族,中华人民共和国公民,自由咨询师、记者,出生于北京市,居住地为北京市石景山区苹果园南东口西井三社区。樊京辉拥有大学本科学历,曾在某中学...<br>- 留学生亲历中东突发冲突!飞机飞一半掉头,领空关闭只能开车逃命:  2026年2月27日的夜晚,身处伊朗首都德黑兰的华人A先生,如往常那般翻阅着手机资讯。突然,一条来自中国驻伊朗大使馆的紧急推送信息令他的心猛地一沉。这份措辞罕见的严正通知中,外交部及我国驻伊朗使领馆...<br>- 伊朗冲突全景与合规应急指南|我们在1月成功预测:美以对伊朗的军事干预概率90%以上 : 第一组,是经济崩溃路径的量化对标:我们将伊朗2025年的核心经济数据——官方通胀率42.5%(实际估计超60%)、货币6个月贬值56%、乳制品价格上涨600%、月均居民收入跌至100美元——与2010...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        小贝求婚失败
+                        <span class="heat-badge">🔥  261836</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 《玫瑰丛生》小贝求婚失败!一场真心与谎言的博弈,看哭无数都市人: 然而最新剧情中,这场备受期待的求婚,却以失败落幕,一句“我现在还不能答应你”,不仅让小贝陷入落寞,更戳中了屏幕前无数人对爱情的焦虑与共鸣。 小贝与王子文饰演的李晓兮,从一场错位的“鉴情”试探开始,上演...<br>- 小贝求婚失败,我却想为她鼓掌:  所以,小贝的求婚失败了吗? 从结果上看,是“失败”了。但从关系的成长来看,这是一次巨大的成功。 它成功地将两人的关系,从“浪漫但有些模糊的恋爱”,推入了一个“坦诚且需要深度磨合”的新阶段。...<br>- 《小丈夫》分集剧情介绍(更新至40集 大结局):  姚澜年近三十三,终于迎来自己的婚礼,却突然遭遇新郎田坤的前女友抢婚,气得她取消婚礼愤而离开。谁知这桩闹事意外促成了姚澜和大男孩陆小贝的不解之缘。这一切令姚澜疲惫不堪,终于忍痛与陆小贝分手。这时陆小贝...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        伊朗公布高超音速导弹发射画面
+                        <span class="heat-badge">🔥  257353</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 伊朗公布“法塔赫-2”高超音速导弹发射画面,此前称首次使用该导弹袭击美军基地:  据CCTV国际时讯:伊朗今天(3月2日)公布发射“法塔赫-2”高超音速导弹的画面。 据了解,伊朗“法塔赫-2”高超音速导弹精度30米,射程1500公里。该导弹的高精度与超音速突防能力,能对美以关键目...<br>- 伊朗公布行动画面:发射“法塔赫-2”高超音速导弹:  3月2日,伊朗公布发射“法塔赫-2”高超音速导弹的画面。据了解,伊朗“法塔赫-2”高超音速导弹精度30米,射程1500公里。该导弹的高精度与超音速突防能力,能对美以关键目标构成实质性毁伤威胁。伊朗军...<br>- 三消息:火力全开!伊朗展示新型高超音速导弹,射程覆盖以色列全境:  事件回顾:导弹呼啸而过 根据最新消息,就在2026年2月28日到3月1日这几天,伊朗伊斯兰革命卫队大规模发射了自主研发的"法塔赫"高超音速导弹 。这可不是小打小闹,伊朗方面重点打击了以色列的特拉维夫...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        宋雨琦被詹姆斯比心
+                        <span class="heat-badge">🔥  252534</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 宋雨琦封神路:从王嘉尔绯闻女友到NBA受邀明星,三年逆袭全能ACE:  宋雨琦不仅在舞台上为观众带来了震撼,更用真挚的人际关系和情谊告诉我们,真正的明星不止于光环,更在于内心的温度和关怀 5天前 ...<br>- 白鹿×宋雨琦:跨国闺蜜情,为何能粉碎所有恋情谣言?:  当台上的宋雨琦用流利中文喊出“欢迎我们跑男的家人们”时,台下观众席中,一个身着黑色露肩上衣的身影瞬间起身,双手举过头顶,比出一个超大的爱心——那是白鹿。 两天后,白鹿在社交媒体晒出后台与宋雨琦的亲密...<br>- 宋雨琦晒看球赛日常获詹姆斯比心 :  1/ 4今日@宋雨琦_i-dle 晒看球赛日常,与偶像双向奔赴好幸福,什么时候姐姐也能给我比个心呀? ​ 2/ 4今日@宋雨琦_i-dle 晒看球赛日常,与偶像双向奔赴好幸福,什么时候姐姐也能给我比...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        美军证实3架F15战机坠毁
+                        <span class="heat-badge">🔥  250544</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 美军证实3架F15战机坠毁:“明显遭友军击落”:  据央视新闻消息,当地时间3月2日,美国中央司令部发布声明称,三架美国F-15E战斗机在科威特执行行动时因疑似“误击”事件坠毁,但飞行员安全无恙。 声明称,事发期间该地区正遭遇来自伊朗飞机、弹道导弹和...<br>- 美军证实3架F15战机坠毁,因“疑似误击事件”,“明显遭友军击落”:  据@CCTV国际时讯,美国中央司令部刚刚证实,美东时间3月1日晚上11点03分,也就是当地时间3月2日早上7点03分,3架美军F-15E战斗机在科威特执行“史诗怒火”行动时因“疑似误击事件”坠毁。 ...<br>- 美军承认三架F-15坠毁:被科威特误击:  3月2日,美国中央司令部发布声明证实,有三架F-15E战斗机在科威特上空遭友军火力误击坠毁。 美军称,事件发生在当地时间2日8时许,美军战斗机是被科威特防空火力击落的。6名机组人员全部安全弹射,安全...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
