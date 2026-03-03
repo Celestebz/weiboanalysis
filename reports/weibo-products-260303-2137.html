@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-03-03 21:37:49</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">88.6</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        月全食
+                        <span class="heat-badge">🔥  1116463</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                月全食是一种罕见的天文现象，当太阳、地球、月球运行至一条直线时，月球完全进入地球本影区，太阳光被地球遮挡，月球呈现神秘的「红铜色」。2026年元宵节将迎来一次月全食，届时千年传统节日与宇宙奇观将浪漫邂逅，成为难得的观赏时机。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>追月指南</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>月全食实时模拟动画，可视化展示五个阶段变化</li><li>基于定位的最佳观测点推荐与天气预报联动</li><li>AR拍月功能，自动识别月相并叠加科普信息</li><li>月食倒计时提醒与观测攻略推送</li><li>月食许愿墙，用户可在「红月」下写下心愿并分享</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">天文爱好者、摄影爱好者、亲子家庭、追求浪漫体验的年轻情侣、对传统节日文化感兴趣的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        豆包红包
+                        <span class="heat-badge">🔥  815854</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年春节期间，字节跳动旗下AI助手「豆包」推出新春红包活动，用户可领取0.1元至8888元不等的红包，常见金额为1.66元、1.88元等。此举被视为豆包复刻当年微信春晚红包的「破圈时刻」，意在通过红包社交快速获取用户，抢占AI入口。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>红包雨历史馆</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>收录历年春节互联网红包大事件时间轴（微信摇一摇、支付宝集五福、豆包红包等）</li><li>用户可上传自己历年抢到的红包截图，AI自动识别金额生成「红包运势档案」</li><li>「欧皇排行榜」展示各平台历史最高红包记录及中奖故事</li><li>红包金额预测小游戏：输入生日等信息，AI生成你的「红包玄学指数」</li><li>生成个人专属「互联网红包编年史」海报，可分享至社交平台</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">热衷参与春节红包活动的年轻网民、喜欢回忆互联网发展历程的80后90后、社交媒体活跃用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        拥抱十五五
+                        <span class="heat-badge">🔥  620433</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年10月，党的二十届四中全会审议通过「十五五」规划建议。「十五五」时期（2026-2030年）是中国全面建设社会主义现代化国家的关键五年，也是实施「两步走」战略、基本实现社会主义现代化的重要阶段。「拥抱十五五」话题反映了社会各界对新五年规划的关注与期待。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    89分
+                                </div>
+                                <div class="product-header">
+                                    <h3>我的十五五愿望树</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI生成个人五年规划：输入年龄、职业、梦想，智能匹配国家规划红利生成专属发展建议</li><li>愿望时间胶囊：写下2030年的自己，封存至规划末年自动解锁</li><li>政策红利雷达：实时推送与用户相关的十五五利好政策（就业、住房、教育等）</li><li>同龄人规划社区：查看同年龄段用户的五年目标，互相激励打卡</li><li>规划进度可视化：将个人目标与国家规划进度同步展示，见证共同成长</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-40岁关注个人发展、职业规划的年轻群体，尤其是大学生、职场新人、创业者等希望把握时代机遇的人群</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        周柯宇又要用礼物狙击谁
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                演员周柯宇因热播剧《狙击蝴蝶》中饰演角色「李雾」（谐音「礼物」）走红，被京东签约为「服饰美妆礼物推荐官」。这一角色与商务的巧妙绑定引发全网玩梗，「周柯宇又要用礼物狙击谁」成为其送礼达人人设的标志性话题，粉丝和网友纷纷调侃其「懂礼物」的营销创意。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>礼物狙击手</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI送礼匹配：输入对象性格、关系、场景，智能推荐「狙击心动」礼物清单</li><li>谐音梗礼物生成器：根据收礼人名字生成专属谐音创意礼物方案</li><li>狙击成功率预测：基于大数据分析礼物被喜欢的概率并给出优化建议</li><li>明星同款礼物榜：追踪周柯宇等明星送礼动态，一键get同款</li><li>礼物盲盒社交：匿名互送惊喜礼物，解锁「被狙击」的快乐</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁追星群体、热衷社交送礼的年轻人、不知道送什么礼物的「选择困难症」患者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        元宵晚会 好看
+                        <span class="heat-badge">🔥 晚会 572938</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                元宵节是中国传统节日，源于汉代太一神祭祀，距今已有2000多年历史。正月十五是一年中第一个月圆之夜，又称「上元节」。古人有赏花灯、观灯会的习俗，如成都元宵灯会起源于唐代延续至今。2025年央视元宵晚会精彩纷呈，引发网友热议「好看」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>灯谜元宵会</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI生成个性化灯谜挑战，难度自适应</li><li>AR实景赏灯，足不出户逛全国灯会</li><li>元宵晚会节目实时弹幕互动猜评</li><li>传统习俗小游戏（滚元宵、猜灯谜、放天灯）</li><li>家人远程同屏看晚会，实时语音团聚</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-45岁对传统文化感兴趣的年轻人及家庭用户，尤其是异地无法团聚但想共度元宵的群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        湖南卫视元宵喜乐会
+                        <span class="heat-badge">🔥 晚会 448450</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                湖南卫视元宵喜乐会是自2009年起延续至今的品牌综艺晚会，每年农历正月十五播出。晚会致力于融合传统民俗与现代潮流，挖掘生活温情与美好。近年选址山西长治等历史文化名城，深度结合地方文脉底蕴，通过芒果TV同步直播，让观众在欢笑中感悟生活真谛。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>元宵灯谜大闯关</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI智能生成个性化灯谜，难度自适应调节</li><li>AR扫灯笼解谜，虚拟花灯点亮城市地图</li><li>组队PK模式，与好友实时对战猜谜</li><li>集齐「五福灯」兑换芒果TV会员及晚会周边</li><li>UGC灯谜创作社区，优秀作品可被晚会节目采用</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁年轻群体，尤其是湖南卫视忠实观众、喜欢传统文化与社交互动的用户，以及元宵节期间想要增添节日氛围的家庭用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        伊朗称向美航母发射4枚巡航导弹
+                        <span class="heat-badge">🔥  427633</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年3月，伊朗伊斯兰革命卫队宣布向美军「林肯」号核动力航母发射4枚巡航导弹，袭击时航母位于距伊朗海岸约250至300公里处。伊朗称武装部队对敌方军事力量的打击进入新阶段，但美军方紧急辟谣称未被击中，双方各执一词，中东局势急剧升温。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冲突地图——全球军事动态实时追踪器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时军事冲突地图：用可视化方式展示全球热点地区的军事动态和武器轨迹</li><li>多方信息对比：同时呈现冲突各方声明，用「真假存疑」标签标注争议信息</li><li>武器百科卡片：点击事件可查看涉及武器的3D模型、性能参数和历史战例</li><li>局势推演模拟：基于历史数据预测冲突升级概率和可能走向</li><li>每日简报推送：用通俗语言解读复杂地缘政治，配合趣味信息图</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注国际时事的年轻用户、军事爱好者、国际关系专业学生、需要了解地缘风险的商务人士</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">移动端App + 网页版</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        AI先锋天团亮相MWC
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年世界移动通信大会（MWC2026）即将在西班牙巴塞罗那开展，中兴终端携「AI先锋天团」亮相，将在展会期间举办三场发布会。这标志着AI技术与移动通信产业的深度融合，各大厂商纷纷展示其AI领域的最新成果。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>展会探秘AR</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR实时导览：扫描展位即可查看产品3D演示和详细参数</li><li>AI发布会日程助手：智能推荐感兴趣的发布会并提醒</li><li>虚拟展位收集：集齐各厂商「AI天团」卡牌可兑换周边</li><li>实时翻译字幕：多语言发布会内容同步中文解说</li><li>社交打卡地图：与其他观展者互动，分享科技见闻</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">科技爱好者、行业从业者、无法亲临现场但关注展会的「云观众」、喜欢收集和社交互动的年轻用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        元宵红包
+                        <span class="heat-badge">🔥  368740</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                元宵节是农历正月十五，作为一年中第一个月圆之夜，又称「上元节」。该节日起源于西汉祭祀太一神的习俗，东汉时期因佛教传入增添了「燃灯表佛」的传统。「灯」与「丁」谐音，被赋予生育、祈福的美好象征。如今元宵节发红包已成为现代人传递祝福的新方式。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>元宵灯谜红包</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>用户可创建灯谜红包，好友猜对谜底才能领取</li><li>提供传统灯谜库和AI智能出题两种模式</li><li>红包封面支持DIY花灯动画效果</li><li>猜灯谜排行榜展示好友「智商担当」</li><li>集齐五盏虚拟花灯可解锁隐藏大额红包</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-40岁热衷节日社交的年轻用户群体，尤其是喜欢在微信群发红包、追求趣味互动的都市白领和学生</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        央视元宵晚会
+                        <span class="heat-badge">🔥 晚会 296649</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                央视元宵晚会被称为春晚的「姊妹晚会」，由春晚原班人马打造，在风格、内容、舞美等方面一脉相承。自1985年起举办至今，晚会通过丰富多彩的节目庆祝元宵佳节，传承弘扬中华传统文化，是仅次于春晚的年度文化盛事。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>元宵灯谜大会</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI生成个性化灯谜：根据用户姓名、爱好生成专属谜题</li><li>实时猜谜PK：好友组队在线对战猜灯谜</li><li>晚会节目竞猜：预测元宵晚会收视王、金句等</li><li>虚拟花灯DIY：设计专属电子花灯并分享朋友圈</li><li>方言灯谜挑战：各地方言版灯谜趣味闯关</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-45岁关注传统节日文化的年轻用户群体，尤其是元宵晚会观众、喜欢互动游戏和社交分享的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        世界油阀关闭
+                        <span class="heat-badge">🔥  296620</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年3月初，伊朗为报复美以对其总统府、核设施的军事打击，宣布关闭被称为「世界油阀」的霍尔木兹海峡。伊朗革命卫队声称将打击所有试图通过该海峡的船只，导致全球能源市场剧震，中东产油国储油能力濒临极限，预计25天后或被迫全面停产。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>油价风暴</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时油价波动可视化地图，用颜色深浅展示全球各地油价变化</li><li>「如果油价涨到XX」生活成本模拟器，计算日常开支变化</li><li>能源危机生存指南，提供省油技巧和替代出行方案</li><li>历史能源危机回顾时间线，对比1973年石油危机等事件</li><li>油价预警订阅，设定阈值后推送加油最佳时机</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">有车一族、关注国际局势的年轻白领、财经投资爱好者、物流从业者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        元宵节
+                        <span class="heat-badge">🔥  296423</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                元宵节起源于汉代，最初是汉武帝祭祀「太一神」的日子。东汉明帝时期，因提倡佛法下令正月十五燃灯礼佛，「燃灯」风俗由此从宫廷走向民间。唐代以后，元宵节以「闹」为核心、以「灯」为载体，成为古代少有的打破宵禁、全民狂欢的盛大节日。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    94分
+                                </div>
+                                <div class="product-header">
+                                    <h3>灯谜宇宙</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AR实景猜灯谜：扫描真实花灯或任意物品生成趣味灯谜</li><li>全国灯会地图：一键导航附近元宵灯会活动与打卡点</li><li>元宵社交匹配：通过猜谜风格匹配「灯下知己」，重现古代上元邂逅浪漫</li><li>DIY虚拟花灯：设计专属电子花灯并投放到城市AR夜空</li><li>灯谜闯关PK：好友实时对战猜谜，赢取「元宵锦鲤」称号</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁热爱传统文化与社交互动的年轻人，尤其是情侣、亲子家庭及喜欢线下打卡的城市探索者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序（支持AR功能）</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">78/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        迪奥官宣王楚然
+                        <span class="heat-badge">🔥  296100</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年3月3日，迪奥在巴黎时装周秋冬大秀当天，官宣演员王楚然出任品牌大使。此次合作打破奢侈品牌惯例，采用「无考察期空降」模式，引发全网热议。王楚然凭借172cm模特身材和东方骨相美学，被认为与迪奥优雅风格高度契合，成为95花时尚资源大洗牌的标志性事件。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>星耀衣橱——明星代言预测社交游戏</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>「押宝竞猜」：用户预测下一个品牌代言人花落谁家，猜中赢取虚拟时尚币</li><li>「人设匹配度」：AI分析明星气质与品牌调性契合度，生成专属匹配报告</li><li>「代言时间线」：可视化追踪各大奢侈品牌代言人更迭历史与规律</li><li>「虚拟试穿PK」：用AI换装对比不同明星穿同款的效果，投票选出最佳演绎</li><li>「时尚情报站」：实时推送品牌动态、时装周资讯，抢先获取代言风向</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁关注时尚娱乐的年轻女性，追星群体，对奢侈品牌和明星穿搭感兴趣的用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        品牌方回应迪丽热巴缺席
+                        <span class="heat-badge">🔥  296003</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年3月3日，迪丽热巴因「不可抗力因素」滞留迪拜，无法按原计划抵达巴黎，缺席迪奥2026秋冬女装成衣大秀。工作室声明艺人一切平安，迪奥全球公关总监随后发声回应，态度温和，表达了对艺人的关切与理解。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>秀场Plan B</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时航班异常监测与备选方案推荐</li><li>全球时装周日程同步与冲突预警</li><li>「不可抗力」场景模拟器：生成官方声明模板</li><li>品牌方/艺人双端沟通协作面板</li><li>虚拟出席方案：AI生成艺人全息投影或数字分身参与活动</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">明星经纪团队、时尚品牌公关部门、大型活动策划方、艺人工作室运营人员</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">SaaS网页平台+移动端App</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        网盘成违规影视剧避风港
+                        <span class="heat-badge">🔥  295760</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                中国社科院法学所研究显示，上千部含有淫秽色情、恐怖暴力等限制级内容的违禁境外影视剧及盗版资源，正通过网盘、浏览器等平台借助AI技术大肆传播。专家建议从严压实平台责任，这一现象引发了关于网络内容监管与文化安全的广泛讨论。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>片源溯源师</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI识别影视剧正版来源并一键跳转官方平台</li><li>生成「观影合规报告」展示你的正版观影比例</li><li>正版片源比价功能覆盖全网视频平台</li><li>「洗白计划」记录从盗版转正版的成就徽章</li><li>分享正版观影清单可获取平台会员折扣券</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">有一定版权意识但苦于找不到正版渠道的年轻影视爱好者，以及希望「体面观影」的都市白领群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">浏览器插件 + 微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
