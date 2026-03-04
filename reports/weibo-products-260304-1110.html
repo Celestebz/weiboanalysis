@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-03-04 11:10:32</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">14</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">88.6</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        两会
+                        <span class="heat-badge">🔥  1059662</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                两会是中华人民共和国全国人民代表大会和中国人民政治协商会议的简称，每年3月召开。全国人大负责立法、选举国家机构负责人、决定国家大事，是最高国家权力机关；政协则负责协商议政、建言献策、民主监督。两会与民生息息相关，涉及农业、教育、医疗等各领域政策制定。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>两会译站</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>政策「人话版」翻译：将官方文件转化为通俗易懂的大白话解读</li><li>「和我有啥关系」智能匹配：输入职业身份，自动筛选相关政策</li><li>提案热度榜：用数据可视化展示代表委员提案的关注度变化</li><li>政策时间轴：追踪某项议题从提出到落地的完整历程</li><li>互动问答区：用户提问由AI结合官方资料即时解答</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-45岁关心国家政策但觉得官方文件晦涩难懂的普通公民，尤其是职场新人、个体经营者、农民工群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        中国石油发布公告
+                        <span class="heat-badge">🔥  747627</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年3月3日晚间，中国石油发布股票交易异常波动公告。公司A股股票在2月27日至3月3日连续三个交易日内，收盘价格涨幅偏离值累计超过20%，触发上交所异常波动规定。公司就近期股价大幅上涨行情进行回应说明。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>韭菜雷达</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时监控A股异常波动公告并推送预警</li><li>用「人话」翻译晦涩的上市公司公告内容</li><li>股价异动历史复盘与后续走势统计分析</li><li>散户情绪指数与社交媒体舆情热度追踪</li><li>一键生成「该不该跑」决策参考卡片</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对股市公告看不懂又怕踩雷的普通散户投资者，以及想快速了解市场异动的财经爱好者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        2026全国两会这些看点值得关注
+                        <span class="heat-badge">🔥  609364</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年全国两会即将召开，今年是「十五五」规划开局之年，也是为2035年基本实现社会主义现代化夯实基础的关键时期。本届两会将锚定中华民族伟大复兴目标，政策保持连续性与稳定性，重点围绕中国式现代化，强调科技自主创新等核心议题。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>两会解码器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI实时解读：将政府工作报告「翻译」成大白话，秒懂政策含义</li><li>政策关联我：输入职业/城市/年龄，智能匹配与你相关的政策红利</li><li>时间轴预测：可视化展示「十五五」期间重大政策落地时间节点</li><li>热词竞猜游戏：预测今年两会高频词，答对赢积分兑换周边</li><li>政策进度条：追踪往年两会承诺的兑现情况，用数据说话</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-40岁关心国家大事但觉得政策文件「太难啃」的年轻人，尤其是职场新人、创业者、大学生等希望了解政策红利的群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        鸿蒙智行技术焕新发布会
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                鸿蒙智行官方宣布将于2026年3月4日14:30举办「鸿蒙智行技术焕新发布会」，主题为「万象更新，驭见未来」。2025年鸿蒙智行全年交付新车超58万台，同比增长32%，尊界或将首发搭载华为智能汽车黑科技，问界、尊界双旗舰并立引发市场高度关注。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    89分
+                                </div>
+                                <div class="product-header">
+                                    <h3>智行预言家</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>发布会实时弹幕竞猜：猜新车参数、价格、功能点赢积分</li><li>AI技术解读官：用大白话秒懂华为黑科技原理</li><li>虚拟试驾体验：AR预览新车外观内饰并「云坐进」驾驶舱</li><li>车友热度榜：实时追踪问界vs尊界的讨论热度PK</li><li>购车决策树：根据预算和需求智能匹配鸿蒙智行车型</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注华为生态的科技爱好者、有购车意向的年轻消费者、汽车测评博主及鸿蒙智行现有车主</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        霸王茶姬口令
+                        <span class="heat-badge">🔥  590068</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年12月26日，「霸王茶姬咖啡因」话题冲上微博热搜，起因是某自媒体将茶叶中天然含有的咖啡因与管制药物混为一谈，制造「涉毒」谣言。这场精心设计的流量骗局让品牌陷入舆论漩涡，最终上海警方通报造谣者任某已被依法采取刑事强制措施。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>谣言粉碎机——品牌危机模拟器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>谣言识别训练：通过真实案例学习辨别食品安全类谣言的套路和特征</li><li>危机公关模拟：扮演品牌方进行限时危机应对决策，体验舆论风暴</li><li>科普知识闯关：咖啡因、添加剂等常见「伪科学」话题的趣味问答</li><li>谣言传播可视化：动态展示一条谣言如何在社交网络裂变扩散</li><li>辟谣成就系统：收集辟谣徽章，解锁「理性网民」「科学卫士」等称号</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁关注食品安全、易受社交媒体信息影响的年轻消费者，以及品牌公关从业者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        雷军2026两会准备5份建议
+                        <span class="heat-badge">🔥  564277</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年全国两会期间，全国人大代表、小米集团创始人雷军围绕「人工智能+」与「新质生产力」两大主线，提交了五份建议，涵盖智能驾驶安全宣传、人形机器人在智能制造中的应用、科技公益发展、智能汽车时代交通安全文明体系建设，以及智能网联新能源汽车复合型人才培养等领域。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    84分
+                                </div>
+                                <div class="product-header">
+                                    <h3>两会提案追踪器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>代表建议可视化时间轴：追踪雷军等科技代表历年两会建议及落实进度</li><li>AI政策解读：用大白话解释建议内容对普通人生活的影响</li><li>建议落地预测：基于政策分析预测哪些建议最可能被采纳实施</li><li>互动投票墙：用户可为感兴趣的建议点赞并发表看法</li><li>个人关联度测算：输入职业自动匹配与你最相关的两会建议</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注科技政策的职场人士、新能源汽车从业者、人工智能行业从业者、对两会政策感兴趣的年轻用户群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">68/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        霍尔木兹海峡十多艘油轮被炮弹击中
+                        <span class="heat-badge">🔥  551305</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                据新华社消息，伊朗伊斯兰革命卫队海军副司令阿克巴尔扎德表示，霍尔木兹海峡已完全处于伊朗海军控制之下，十多艘油轮在该海峡被炮弹击中并烧毁。美国中央司令部则声称已摧毁17艘伊朗舰艇，并打击了近2000个伊朗目标，双方冲突持续升级。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>油价风向标</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>全球航运要道实时冲突地图可视化</li><li>原油期货价格与地缘事件联动分析</li><li>个人加油时机智能提醒推送</li><li>历史战争对油价影响案例库</li><li>用户自选关注区域预警订阅</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注国际局势的普通网民、有车一族、原油期货投资者、财经爱好者及物流从业者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        酸奶能消食是谣言
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日「酸奶能消食是谣言」登上热搜，引发公众关注。专家指出，饭后喝酸奶助消化的说法并不科学：胃酸pH值低至1.5-2.0，大部分益生菌在强酸环境中存活率不足5%，难以到达肠道发挥作用；常温酸奶更是经过灭菌处理，活菌数量本就有限。饱腹后再喝酸奶反而会增加胃负担。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>谣言粉碎胃</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>每日「养生谣言」趣味问答闯关，答对解锁真相卡片</li><li>「谣言vs科学」对战模式，邀请好友PK健康知识</li><li>AI营养师角色扮演，用幽默对话解答饮食困惑</li><li>「家族群辟谣神器」一键生成长辈友好型科普图文</li><li>个人「智商税」档案，记录曾经信过的谣言并颁发成长勋章</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-40岁关注健康但常被养生谣言困扰的年轻人，以及需要向长辈科普辟谣的「家庭健康担当」群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        建议高速年度3000公里免费
+                        <span class="heat-badge">🔥  524588</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2024年全国两会期间，全国人大代表庹庆明提交建议，呼吁优化高速公路节假日免费政策。他建议将现行政策调整为「年度免费里程制」，即7座及以下非营运小客车每年享有3000公里免费通行额度，依托全国ETC联网系统自动扣减，实现精准管理。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    86分
+                                </div>
+                                <div class="product-header">
+                                    <h3>里程宝——高速免费里程管家</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时查询剩余免费里程额度及使用明细</li><li>智能规划出行路线，优化免费里程使用效率</li><li>「里程交易所」功能：用户间可转让或交换闲置里程</li><li>节假日出行拥堵预测，推荐错峰出行方案</li><li>家庭账户绑定，多车里程统一管理与分配</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">拥有私家车的自驾出行用户，尤其是年出行里程在2000-5000公里区间、注重出行成本优化的家庭用户及自驾游爱好者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + App双端</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">68/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        王毅要求以方确保中国人员机构安全
+                        <span class="heat-badge">🔥  484153</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年3月3日，外交部长王毅应约与以色列外长萨尔通电话，要求以方确保在以中国人员和机构安全。此前一天，王毅已与伊朗外长通话，伊方表示愿全力保障中方人员安全。当前中东局势紧张，美伊谈判期间美方对伊发动军事行动，中方呼吁通过对话解决争端，防止战事扩大。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    91分
+                                </div>
+                                <div class="product-header">
+                                    <h3>平安海外——中国公民海外安全实时地图</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>全球热点地区风险等级实时标注与预警推送</li><li>中国驻外使领馆一键求助与位置导航</li><li>海外中国公民「报平安」社区互助网络</li><li>突发事件撤侨信息聚合与航班动态追踪</li><li>个人行程报备与紧急联系人自动通知系统</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">海外留学生、出境游客、外派工作人员、跨国企业员工及其国内家属</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序+App双端</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">19/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic good">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        12306回应乘客在高铁上用排插
+                        <span class="heat-badge">🔥  472123</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2024年3月3日，有网友在社交媒体发帖称在高铁上看到乘客使用排插充电，引发安全性争议。12306客服回应称，虽然排插未被列入禁带物品名单，但高铁上不允许旅客使用排插，因为排插功率过大会影响列车正常用电，存在安全隐患。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    79分
+                                </div>
+                                <div class="product-header">
+                                    <h3>出行电量管家</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>智能计算行程所需电量并提前提醒充电</li><li>一键查询各交通工具充电设施分布图</li><li>旅途用电规范科普与违规物品查询</li><li>共享充电宝预约与沿途取还点推荐</li><li>低电量紧急求助社区互助功能</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">经常乘坐高铁、飞机等公共交通的商务人士、学生及旅行爱好者，尤其是「电量焦虑症」患者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">62/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        黄金白银再直线拉升
+                        <span class="heat-badge">🔥  435641</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近期黄金白银价格再度直线拉升，引发市场广泛关注。背后原因主要包括：全球央行持续宽松货币政策推高通胀预期、地缘政治紧张局势加剧避险需求、美元波动等因素。黄金作为传统避险资产，白银兼具工业与投资双重属性，二者同涨反映出市场对经济不确定性的担忧情绪。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>金银冲浪</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时金银价格「心跳图」可视化，用心率波动展示涨跌刺激感</li><li>AI预测下一波拉升时机并推送「上车提醒」</li><li>虚拟持仓PK赛，与好友比拼谁的「纸上黄金」赚得多</li><li>历史大涨事件回顾，沉浸式体验2008年金融危机等名场面</li><li>金价涨跌表情包生成器，一键分享朋友圈炫耀或吐槽</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对贵金属投资感兴趣但缺乏专业知识的年轻用户、喜欢追热点话题的社交达人、想了解理财但又怕亏钱的「围观党」</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        伊朗导弹击中美第五舰队总部瞬间
+                        <span class="heat-badge">🔥  416696</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2024年10月28日，美以联军对伊朗本土发动大规模空袭后，伊朗在90分钟内展开反击，向位于巴林首都的美国海军第五舰队总部发射导弹并成功命中。这是该基地30多年来首次遭受袭击，巴林首都响起空袭警报，爆炸产生的浓烟冲天而起，标志着中东局势急剧升级。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    96分
+                                </div>
+                                <div class="product-header">
+                                    <h3>全球冲突实时态势图</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>3D地球可视化展示全球军事冲突热点区域及实时动态</li><li>导弹轨迹模拟还原功能，用「沙盘推演」视角理解攻防态势</li><li>多方信源聚合对比，自动标注各方立场与信息可信度</li><li>历史冲突时间线回溯，关联分析地缘政治因果链</li><li>个性化「战略分析师」AI助手，解读复杂局势背后的博弈逻辑</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注国际时事的年轻群体、军事爱好者、国际关系研究者、新闻从业者及希望拓展全球视野的职场人士</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">网页端+移动端App</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">78/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        中国石油跌停
+                        <span class="heat-badge">🔥  394948</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2024年3月4日早盘，A股「三桶油」集体大跌，中国石油盘中触及跌停，中国石化、中国海油一度跌停。此前一日，三桶油刚连续两个交易日涨停并发布异动公告。市场分析认为，此次剧烈震荡与全球石油需求变化、国际油价波动及主力资金动向等因素相关。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>韭菜震荡仪</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>实时监测个股「过山车」行情，涨停转跌停自动预警</li><li>「情绪温度计」可视化展示散户恐慌/贪婪指数</li><li>历史「割韭菜」名场面回顾与复盘教学</li><li>模拟交易游戏：体验极端行情下的心跳决策</li><li>「冷静期」功能：检测到冲动交易时强制弹出表情包劝退</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对股市感兴趣但缺乏经验的年轻散户、喜欢围观财经热点的「吃瓜群众」、希望通过娱乐方式学习风险意识的投资小白</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        全红婵在村里聚完餐骑车离开
+                        <span class="heat-badge">🔥  378018</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                跳水奥运冠军全红婵春节期间回到广东湛江老家，与家人团聚过年。正月十五「年例」期间，她参加村里聚餐后骑电动车潇洒离开，画面被网友拍下引发热议。据悉她已在老家待了约3个月，网上出现关于其是否退出国家队的讨论，其母亲已对退赛传闻作出回应。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    88分
+                                </div>
+                                <div class="product-header">
+                                    <h3>村味记忆</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>记录家乡民俗活动（如年例、舞龙舞狮）并生成精美图文日志</li><li>AI识别方言并自动翻译配字幕，保存乡音记忆</li><li>家族成员协作编辑「我们村的故事」电子村志</li><li>骑行/步行打卡村里地标，解锁童年记忆徽章</li><li>生成「XX村荣誉村民证」等趣味社交分享卡片</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁在外打拼、逢年过节返乡的年轻人，以及关注乡土文化、喜欢记录生活的用户群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
