@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-03-23 04:50:01</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">91.2</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        Bin是世一上
+                        <span class="heat-badge">🔥  86154</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2026年LPL春季赛，BLG以1:2不敌AL，赛后上单选手Bin在微博发文称「我依然是世一上」，在队友表现不佳的背景下，这番自信言论迅速引爆全网热议，网友围绕其「狂言」还是「自信」展开激烈交锋，成为电竞圈现象级话题。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    92分
+                                </div>
+                                <div class="product-header">
+                                    <h3>世一挑战——电竞选手「狂言」生成器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>输入你的游戏ID和段位，AI自动生成一段Bin风格的「世一宣言」配专属海报</li><li>「狂言排行榜」：用户投票评选最离谱、最霸气、最好笑的宣言，每日更新TOP榜</li><li>「打脸指数」实时追踪：绑定游戏战绩，系统自动计算你的宣言与实际表现的「打脸差值」并生成搞笑报告</li><li>「世一XX」称号生成：支持各职业位置和日常场景（如世一打工人、世一干饭王），一键分享朋友圈</li><li>「名场面重现」互动剧场：用户可选择经典电竞赛后场景，扮演选手发表赛后感言，AI模拟弹幕和网友反应</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁的英雄联盟及LPL赛事观众、电竞梗文化爱好者、社交媒体活跃的年轻用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">78/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        BLG夺冠
+                        <span class="heat-badge">🔥  82922</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                BLG战队近年来在LPL赛场上强势崛起。2024年夏季赛决赛中，BLG以3比0横扫WBG夺冠；2025年又在深圳大运中心以3比2险胜TES，再次捧起银龙杯。Knight荣获总决赛MVP，Bin、Elk等选手表现亮眼，BLG正式确立了自己的「王朝地位」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    93分
+                                </div>
+                                <div class="product-header">
+                                    <h3>冠军之路·电竞战术复盘馆</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>3D交互式「上帝视角」团战复盘，用户可拖动时间轴逐帧回放关键团战并切换任意选手视角</li><li>「冠军剧本生成器」：输入阵容自动模拟BP对局走向，体验教练的战术博弈快感</li><li>「名场面混剪工坊」：AI自动识别高光时刻，用户一键生成带解说配音的短视频并分享</li><li>「预言家排行榜」：每场比赛前用户预测胜负、MVP和击杀数，积分兑换选手签名周边</li><li>「成长时间线」：可视化展示BLG等战队从建队到夺冠的完整历程，含选手数据成长曲线</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18至30岁的英雄联盟电竞爱好者，尤其是喜欢深度分析比赛、热衷社交分享和收藏电竞周边的LPL核心粉丝群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + 配套H5分享页</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        9组数据见证大国治水生动画卷
+                        <span class="heat-badge">🔥  73452</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                近日，官方发布九组关键数据展示中国治水成就。「十四五」期间，全国完成水利建设投资5.68万亿元，181项重大水利工程开工建设，国家水网覆盖范围占国土面积比例达80.3%，江河安澜、清水绿岸的生态画卷正徐徐展开，彰显大国治水的磅礴力量。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    91分
+                                </div>
+                                <div class="product-header">
+                                    <h3>河山水脉——中国治水互动地图</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>3D交互式水网地图，可缩放查看全国水利工程分布与河流走向</li><li>时间轴穿越功能，对比古今同一流域的水利变迁（如都江堰到南水北调）</li><li>「我家门前那条河」功能，输入地址即可查看附近水系治理前后卫星对比图</li><li>治水数据可视化故事线，将九组核心数据转化为动态信息图谱与趣味动画</li><li>「水知识闯关」答题游戏，融入防洪、节水、水生态等科普内容，可生成个人水素养报告</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对国家基建成就感兴趣的大众用户、地理与水利知识爱好者、中小学生及教师（科普教育场景）、关注家乡发展变化的各年龄段网民</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序（兼具H5分享页面）</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">74/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        问界M6静态评测首发
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                问界品牌于2026年初发布全新车型问界M6的静态评测，该车定位25万级中大型智能电动SUV，填补M5与M7之间的产品空白。新车搭载800V架构，车身长4.96米，剑指理想、特斯拉等竞品，被视为新能源SUV市场的「破局者」，引发行业广泛关注。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    93分
+                                </div>
+                                <div class="product-header">
+                                    <h3>「车评擂台」——AI互动式新车评测对战平台</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>用户可选择两款竞品车型进行「可视化参数对战」，以擂台PK形式动态呈现优劣</li><li>AI智能解说员用脱口秀风格实时点评每一项参数对比，生成趣味短视频</li><li>「盲猜车型」小游戏：根据局部细节图或参数猜车型，答对赢积分兑换试驾券</li><li>用户可自定义需求权重（如续航优先、智能座舱优先），AI生成个性化「最佳匹配车型」推荐报告</li><li>「云端静态评测」功能：360度高清车模交互浏览，支持开门、调座椅、看后备箱等沉浸式体验</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-40岁关注新能源汽车的潜在购车用户，尤其是在多款竞品间犹豫不决、喜欢通过互动内容获取决策信息的年轻消费者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        5种炎症可能变成癌症
+                        <span class="heat-badge">🔥  71545</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                医学研究表明，从炎症到癌症可能只需几步。慢性萎缩性胃炎、慢性肝炎、慢性胰腺炎、肠道炎症及慢性咽喉炎等5种常见炎症，若长期不治疗，可能逐步发展为癌症。许多人对这些「小炎症」不以为意，但它们实际上是「癌变警报」，早发现早干预至关重要。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>炎小灭——你的炎症风险雷达</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>「炎症档案」：用户输入体检报告或症状，AI自动评估5大高危炎症风险等级并生成可视化雷达图</li><li>「癌变进度条」：用趣味动画模拟炎症→癌变的演进路径，让用户直观感受每个阶段的危险程度，激发重视</li><li>「灭火任务」：根据用户炎症类型生成个性化「灭火清单」，包括饮食禁忌、用药提醒、复查周期等，完成任务可点亮勋章</li><li>「炎症PK擂台」：邀请好友比拼健康习惯打卡天数，用社交竞争机制让抗炎变成一场有趣的游戏</li><li>「问医快线」：一键连线消化科、肝病科等对口专科医生，支持图文问诊和体检报告解读</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">25-55岁关注健康但缺乏系统管理的人群，尤其是有慢性胃炎、肝炎等炎症困扰却容易忽视的上班族和中年群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        央视曝活鱼被人为麻醉乱象
+                        <span class="heat-badge">🔥  66886</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                央视《财经调查》历时两个多月，跨越多省暗访水产市场、生产企业和餐饮门店，曝光活鱼流通行业存在严重乱象：商贩普遍使用丁香酚、工业酒精、甲盐等「三无」麻醉剂让活鱼「休眠」，以降低运输损耗、伪装鱼的鲜活状态。节目播出后，材料已移交国家市场监督管理总局介入调查。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>鲜知鱼——扫一扫，看清你盘中鱼的前世今生</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>「鱼脸识别」趣味扫描：对准鱼摊上的鱼拍照，AI判断鱼的品种、产地推测及是否存在异常休眠体征（如鳃色、体表黏液状态），给出「活力指数」评分</li><li>「麻醉鱼鉴别指南」互动教学：用短视频和动画演示如何通过观察鱼眼、鳃部、尾部反应等方式辨别鱼是否被麻醉，用户可跟练打卡获得「买鱼达人」徽章</li><li>「水产市场红黑榜」众测地图：用户可对身边的水产市场、商贩进行匿名评价和举报，系统聚合数据生成区域水产安全热力图，标注高风险摊位</li><li>「从塘到桌」溯源模拟器：用趣味闯关游戏形式，让用户体验一条鱼从养殖、运输、批发到零售的全链路，每个环节设置「黑心商贩」陷阱，通关即掌握食品安全知识</li><li>「食安快报」推送与一键举报：聚合央视及各地食品安全曝光信息，用户发现问题可一键生成举报材料并对接12315平台</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">关注食品安全的家庭主妇和主夫、经常逛水产市场的消费者、美食博主及餐饮从业者，以及对科普知识感兴趣的年轻用户群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        苍兰诀
+                        <span class="heat-badge">🔥 剧集 60137</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                《苍兰诀》是根据九鹭非香同名仙侠言情小说改编的热播剧。讲述天界低阶仙女「小兰花」意外复活了被封印的魔尊「东方青苍」，两人因同心咒绑定命运，从互换身体、相互对抗到逐渐相知相爱的虐恋仙侠故事，引发全网追剧热潮。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    91分
+                                </div>
+                                <div class="product-header">
+                                    <h3>兰诀奇缘——仙侠互动剧情游戏</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>「命运同心咒」双线剧情：玩家可分别以小兰花或东方青苍视角体验故事，选择不同对话触发隐藏剧情线</li><li>「互换身体」趣味玩法：模拟剧中灵魂互换桥段，用对方身份完成搞笑任务挑战，如魔尊学插花、仙女学霸气</li><li>「三界图鉴」世界观百科：收集天界、魔界、人界角色卡牌与场景，解锁原著彩蛋和幕后花絮</li><li>「仙侠CP社区」：用户可创作同人短篇、绘制角色插画、发布剧情二创，支持投票评选每周最佳作品</li><li>「情感羁绊值」养成系统：通过每日互动任务提升CP默契值，解锁专属语音、壁纸和限定剧情番外</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁的仙侠剧爱好者、《苍兰诀》原著粉丝及剧粉、喜欢互动叙事和角色养成的女性用户群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + 移动端App</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">15/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        NBA点赞成金
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                新浪NBA官方推出「NBA点赞成金」互动活动，用户进入指定话题页，点赞带有NBA或球队超话标签的优质博文，即可触发随机红包奖励，金额从几元到万元不等。活动引发大量用户参与「薅羊毛」，同时也有人质疑其是否存在诈骗风险或仅是平台的流量获取手段。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    89分
+                                </div>
+                                <div class="product-header">
+                                    <h3>赛场掘金 — NBA互动竞猜红包平台</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>「比赛时刻」实时红包雨：在NBA比赛关键节点（绝杀、扣篮、三分）自动触发全场红包，用户点赞预测即可瓜分奖池</li><li>「球星人气战」点赞PK榜：用户为喜爱球星点赞助力，排行榜前列球星的粉丝团可解锁专属红包池和限量数字球星卡</li><li>「反诈雷达」智能识别系统：自动检测仿冒活动链接和虚假红包页面，为用户标记风险等级并一键举报</li><li>「薅毛攻略」社区板块：用户分享真实中奖记录、活动参与技巧和避坑指南，优质攻略可获得额外积分奖励</li><li>「赛季成就」勋章体系：根据用户观赛互动、点赞频次、竞猜准确率等生成个人赛季报告和稀有勋章，可社交分享</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁NBA球迷群体，热衷社交互动与线上薅羊毛的年轻用户，以及关注体育赛事但缺乏深度参与渠道的泛体育爱好者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序（可嵌入微博H5页面）</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        伊朗导弹绕过以色列拦截弹
+                        <span class="heat-badge">🔥  28150</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                伊朗近期对以色列发动多轮导弹打击，其中一枚导弹成功绕过以色列多套拦截系统，击中耶路撒冷。伊朗动用了包括「泥石」固体燃料导弹在内的先进武器，展现出数十年导弹技术积累的实战能力，标志着中东冲突烈度显著升级。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    93分
+                                </div>
+                                <div class="product-header">
+                                    <h3>弹道观察者（MissileTracer）</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>3D可视化还原导弹飞行轨迹与拦截博弈全过程</li><li>各国防空系统拦截原理科普动画（铁穹、箭-3、大卫投石索等）</li><li>实时冲突态势地图，标注打击轮次与落点热力分布</li><li>「攻防推演」互动模式：用户可模拟调配拦截资源对抗来袭导弹波次</li><li>军事专家短视频解读与社区讨论区，支持观点投票和预测打卡</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对国际军事局势感兴趣的18-45岁男性用户、军事爱好者、国际关系学生及时事新闻深度阅读者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序 + H5网页双端</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        Bin FMVP
+                        <span class="heat-badge">🔥  28117</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                英雄联盟职业选手陈泽彬（ID：Bin）荣获FMVP（总决赛最有价值选手）荣誉，引发热议。粉丝在其社交媒体评论区纷纷劝诫他专注职业、远离网红圈子，避免重蹈其他LPL选手出轨打胎等丑闻覆辙，希望他珍惜荣誉、好好打比赛。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    87分
+                                </div>
+                                <div class="product-header">
+                                    <h3>电竞荣誉守护者</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>FMVP等电竞重大荣誉实时追踪与高光时刻回放</li><li>选手职业生涯数据可视化时间轴，记录每一座奖杯</li><li>粉丝「正能量寄语墙」，为选手送上鼓励与祝福</li><li>电竞选手「人设风险雷达」趣味测试，模拟职业生涯抉择</li><li>冠军纪念数字徽章NFT收藏与社区分享</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">英雄联盟电竞爱好者、LPL赛事粉丝、职业选手追随者，年龄集中在16-30岁的Z世代用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">72/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">15/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        周也 毛利兰
+                        <span class="heat-badge">🔥 剧集 23417</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                演员周也在电视剧《你好 1983》中饰演女主角「夏晓兰」，以齐刘海搭配复古高马尾造型亮相，其标志性的尖锐发尖与《名侦探柯南》中「毛利兰」的经典形象高度相似，被网友称为「三次元毛利兰具象化」，相关话题迅速登上微博热搜，引发广泛讨论。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>次元照镜子</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>上传自拍，AI自动匹配最像你的动漫角色并生成对比图</li><li>「神还原排行榜」：展示明星与动漫角色的经典撞脸案例，用户可投票打分</li><li>「角色变装间」：选择任意动漫角色，AI将你的照片转化为该角色的cos风格照</li><li>「发型试戴」：一键试戴毛利兰同款犀牛角高马尾等经典动漫发型，预览真实效果</li><li>生成专属「二次元身份证」卡片，包含匹配角色、相似度评分和性格标签，方便社交分享</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁的动漫爱好者、追星族、社交媒体活跃用户，喜欢尝试新奇玩法并乐于在朋友圈和微博分享趣味内容的年轻群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        薛之谦演唱会
+                        <span class="heat-badge">🔥 演出 22973</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                薛之谦近年来持续举办大规模世界巡回演唱会，从「摩天大楼」到「天外来物」巡演，足迹遍布全球多个城市。演唱会不仅以音乐表演著称，还因现场粉丝互动频频引发社交媒体热议，如重庆场的「舔狗事件」等话题持续发酵，使其演唱会成为兼具娱乐与社交属性的现象级事件。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    93分
+                                </div>
+                                <div class="product-header">
+                                    <h3>演唱会搭子·拼场社交</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>智能拼座匹配：根据歌单偏好、座位区域、性格标签匹配同场观演搭子</li><li>实时弹幕互动墙：演唱会进行时开放同场观众专属弹幕空间，分享视角和感受</li><li>名场面投票与回放：用户投票评选每场演唱会的「名场面」，生成精彩片段合集</li><li>演唱会社交故事线：记录每次观演经历，生成个人「追演时间轴」并可分享</li><li>散场后社交局：演唱会结束后自动推荐附近拼车、拼饭局，延续现场社交氛围</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁热衷现场演出的年轻音乐爱好者，尤其是独自观演、希望结识同好的「一人观演族」以及活跃的追巡演粉丝群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">17/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        张靓颖回应do脸翻车
+                        <span class="heat-badge">🔥  22868</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年3月21日，张靓颖在广州演唱会上主动回应近期「表情僵硬」争议，坦言假期尝试医美项目时「稍微over了一点」，导致面部暂时无法自然做表情，自封「不笑女」。她以高情商的幽默自嘲化解尴尬，现场反响热烈，相关话题迅速登上微博热搜。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    92分
+                                </div>
+                                <div class="product-header">
+                                    <h3>DO脸模拟器</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI「医美风险预览」：上传自拍，模拟不同医美项目的术后效果及可能翻车的夸张效果</li><li>「表情恢复挑战」小游戏：模拟术后恢复期，用前置摄像头检测你能否做出指定表情，通关解锁成就</li><li>「不笑女」段子生成器：输入尴尬场景，AI生成张靓颖式高情商自嘲话术</li><li>医美项目科普百科：用趣味漫画形式讲解各类医美项目的真实恢复期、风险和注意事项</li><li>「翻车日记」社区：用户匿名分享自己的医美或变美翻车经历，互相打气评选「最佳自嘲奖」</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-35岁对医美感兴趣或有医美经历的年轻女性用户，以及关注娱乐热点、喜欢互动娱乐内容的社交媒体活跃群体</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">16/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        张凌赫的撕拉片又被热议了
+                        <span class="heat-badge">🔥  22789</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                演员张凌赫的撕拉片（即拍立得照片）多次引发热议。起因是其撕拉片成片与品牌精修图存在差异，引发网友关于「真实颜值」的讨论。此前他在直播中提及撕拉片停产因「不环保」也曾被误解。但动态生图被网友认为比精修更能打，颜值话题持续发酵。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    90分
+                                </div>
+                                <div class="product-header">
+                                    <h3>拉片鉴颜所</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>AI撕拉片模拟器：上传自拍一键生成复古撕拉片风格照片，还原真实胶片质感与色偏</li><li>「精修vs生图」对比挑战：用户上传两张照片，让好友投票猜哪张是原图哪张是修过的</li><li>颜值耐看度雷达图：AI从五官立体度、肤质、轮廓线等维度生成趣味「耐看指数」报告</li><li>撕拉片盲盒社交：系统随机匹配，双方互换撕拉片风格自拍，拆开才能看到对方真容</li><li>绝版胶片科普馆：介绍各类停产胶片的历史故事与视觉风格，用户可收集虚拟胶片徽章</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">18-30岁追星族、摄影爱好者、喜欢复古滤镜和社交互动的年轻女性用户</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">微信小程序</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">14/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic excellent">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        伊朗发起第74波打击
+                        <span class="heat-badge">🔥  22591</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                2025年3月22日，伊朗伊斯兰革命卫队宣布发动「真实承诺-4」第74波大规模军事打击，声称采用全新战术和升级系统，对美以目标实施攻势，导致美以多层防空体系崩溃，严重干扰美军武器补给链，同时宣称地面部队处于战备「巅峰状态」。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon excellent">
+                                    94分
+                                </div>
+                                <div class="product-header">
+                                    <h3>战云图谱——全球军事冲突实时推演平台</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"><li>冲突实时地图：以3D地球视角标注全球军事冲突事件，实时更新各方动态与打击波次</li><li>武器装备图鉴：对事件中出现的导弹、防空系统等武器进行可视化科普，含性能参数与对比</li><li>态势推演沙盘：用户可基于当前局势设定变量，AI模拟未来72小时可能走向并生成推演报告</li><li>多方信息对照墙：同步展示冲突各方官方声明与主流媒体报道，用「信息可信度评分」辅助用户辨别</li><li>历史冲突时间线：将伊朗「真实承诺」系列行动等重大事件串联成交互式时间线，支持回溯与对比分析</li></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">对国际军事局势感兴趣的18-45岁用户，包括时政爱好者、军事迷、国际关系专业学生及自媒体从业者</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">网页端+移动端App</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">76/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">18/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
