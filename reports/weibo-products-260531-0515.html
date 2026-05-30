@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-05-31 05:15:33</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0.0</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        巴黎卫冕欧冠冠军
+                        <span class="heat-badge">🔥  750878</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 大巴黎凭什么卫冕欧冠?没有姆巴佩打脸全世界: 大巴黎凭什么卫冕欧冠?没有姆巴佩打脸全世界 #优质图文扶持计划# 当终场哨声在慕尼黑安联球场响起,比分定格在1比1,巴黎圣日耳曼以两回合6比5的总比分淘汰拜仁慕尼黑,连续第二年昂首挺进欧冠决赛。5月3...<br>- 决战欧冠之巅:深度剖析卫冕冠军巴黎圣日耳曼 : 决战欧冠之巅:深度剖析卫冕冠军巴黎圣日耳曼 阿森纳风暴 2026-05-28 22:02 +订阅 在俱乐部史上最重要的一场较量里,阿森纳将与卫冕欧冠冠军巴黎圣日耳曼正面相遇——这是一次关于历史、野心与...<br>- 20亿欧元豪赌“兑现”!“大巴黎”首夺欧冠冠军背后:中东石油资本的足球“野望”有多大?:  北京时间6月1日凌晨,2024/2025赛季欧洲足球冠军联赛决赛结束争夺,法甲霸主巴黎圣日耳曼(以下简称“大巴黎”)5-0击败意甲豪门国际米兰,队史上首次夺得欧冠冠军,并成为欧冠改制以来第24个欧冠...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        姆巴佩
+                        <span class="heat-badge">🔥  525347</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 基利安·姆巴佩:  基利安·姆巴佩(Kylian Mbappé),全名基利安·桑米·姆巴佩·洛坦(Kylian Sanmi Mbappé Lottin),1998年12月20日出生于法国巴黎,法国职业足球运动员,司职前...<br>- 维尔弗里德·姆巴佩:  维尔弗里德·姆巴佩(出生于1970年10月11日)是喀麦隆杜阿拉人,后移民法国,曾效力于巴黎近郊的AS邦迪俱乐部。退役后转型为青训教练,长期担任AS邦迪俱乐部的教练与技术主管。他因培养法国足球明星基...<br>- 姆巴佩与巴黎圣日耳曼的法律之争:背后的复杂故事与未来走向! :  一、事件背景:法律纠纷的起源 事情的起因可以追溯到2024年9月,姆巴佩在为巴黎效力七个赛季后自由身转会皇家马德里。当时,他因巴黎圣日耳曼拖欠工资和奖金向俱乐部索赔5500万欧元。想想看,作为一名顶...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        在上海找到创作主场
+                        <span class="heat-badge">🔥  228965</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 城市开放,方能成就“创作主场” | 锋面评论: 上海给出了一个非常关键的思路。正如备受关注的“沪九条”中提到的,上海将推动全市地标景区、文博场馆、重大节展赛会等向创作者开放,提供创作便利。这个五月,上海交出了“互联网优质内容创作活动月”的答卷:举办...<br>- 追溯长篇小说《上海的早晨》的创作历程与背后故事,全景剖析每一步过程及作者心路分享!: 要看清它背后的来龙去脉,不得不从上海解放初期那一桩看似不起眼的“调岗”说起。 一、从新闻到统战:一桩“调岗”带来的素材源泉 1949年5月,上海解放。曾经的远东最大城市,经历长期战争和经济封锁,电力紧...<br>- 赴虹口之约 寻上海创作主场: 寻上海创作主场 看看新闻knews 2026-05-29 19:34 ·上海 ·看看新闻knews官方网易号 0 01:54作为2026互联网优质内容创作盛典(tcg)的预热活动,5月29日,多位网络...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        天猫618发新券现货低至73折
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- #天猫618发新券现货低至73折#天猫618开门红... 来自喵星人Henry - 微博:  #天猫618发新券现货低至73折#天猫618开门红5月31日现货开卖啦!今年券量全面加码,新发一波超好买:88VIP新发665元消费券,尾款现货都能用,开🍑🔍「天猫618开门红」,531现货开卖,空...<br>- 7.3折!近5年折扣力度最大的一届天猫618今日开卖:  5月21日,天猫618正式开卖。88VIP消费券和平台加补券折扣力度创5年新高,官方立减叠券7.3折起,家电数码32个品类叠加国补低至5折。 这是近5年折扣力度最大的一届618。天猫延续了简单的立减...<br>- 7.3折!近5年折扣力度最大的一届天猫618,5月21日正式开卖: 近5年折扣力度最大的一届天猫618,5月21日正式开卖 5月21日,天猫618正式开卖。这是近5年折扣力度最大的一届618,88VIP消费券和平台加补券力度创新高,官方立减叠券7.3折起。此外,家电数...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        欧冠决赛 难看
+                        <span class="heat-badge">🔥  194814</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 史上最难看的欧冠决赛?巴黎vs阿森纳闷平加时后点球决胜: 史上最难看的欧冠决赛?巴黎vs阿森纳闷平加时后点球决胜 2026年欧冠决赛(巴黎圣日耳曼vs阿森纳)因战术保守、进攻乏味和裁判争议,被大量观众评为“史上最难看的决赛”之一,社交媒体吐槽集中爆发。 一、...<br>- 巴萨抗议遭拒,欧足联为何不受理?背后真相大揭秘! : 球队在欧冠四分之一决赛首回合中遭遇了不公的判罚,普比尔在禁区内的手球未被裁判判罚为点球,巴萨对此提出了正式申诉。然而,欧足联的回复却让人失望——他们不予受理!这到底是为什么?让我们来深入剖析这起事件的...<br>- 维尼修斯事件只是冰山一角!欧冠背后,是欧足联藏了几十年的肮脏: 欧冠背后,是欧足联藏了几十年的肮脏 2026年2月的里斯本光明球场,一场欧冠1/8决赛,把欧足联藏了几十年的底裤,彻底扒了个干净。 皇马对阵本菲卡的首回合较量里,维尼修斯进球后与本菲卡小将普雷斯蒂安尼...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        徐志胜在桃花坞聊沈月王鹤棣
+                        <span class="heat-badge">🔥 综艺 109151</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- #徐志胜在桃花坞聊沈月王鹤棣# @徐志胜1995... 来自微博综艺 - 微博:  #徐志胜在桃花坞聊沈月王鹤棣#@徐志胜1995在@腾讯视频五十公里桃花坞聊到@沈月@王鹤棣_Dylan之前录制综艺时的故事,他表示之前他和沈月给王鹤棣出题“苏东坡的星座是什么”“苏东坡和哪位艺人有关...<br>- #徐志胜在桃花坞聊沈月王鹤棣#@徐志胜1995 ... 来自微博电视 - 微博:  #徐志胜在桃花坞聊沈月王鹤棣#@徐志胜1995@沈月也是没想到绞尽脑汁想的问题能被@王鹤棣_Dylan轻松答对吧!@腾讯视频五十公里桃花坞徐志胜回忆之前三个人一起节目时,原本想了几个关于苏东坡很刁钻...<br>- 王鹤棣事件的真相,被粉丝惯坏且冲动上头,身边已没有人去约束他:  退一万步讲,像沈月这样的内娱小花,徐志胜这样的综艺老油条,他们怎么可能会公然在节目中嘲讽身为顶流,且是朋友的王鹤棣,至于说“私下拉小群”也是人家摆在台面上说出来的,而所谓的拉小群,且是这些朋友为王鹤...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        点球大战
+                        <span class="heat-badge">🔥  102148</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 点球决胜:  点球大战又称“点球决胜”。当双方球队在90分钟常规赛和30分钟加时赛均打成平手的情况下,便会进行“点球大战”。点球大战是足球比赛中淘汰赛决定胜负的最后方式。 1867年至1970年间,足球规则并没有...<br>- 一文读懂!“点球大战”的前世今生 :  “格子军团”克罗地亚点球决胜连克日本、巴西闯入半决赛;“亚特拉斯雄狮”摩洛哥在八分之一决赛点球决胜零封西班牙;阿根廷与荷兰的点球决胜跌宕起伏,荷兰险些完成常规时间与点球大战的双重大逆转…… 世界杯淘...<br>- 2022世界杯:点球大战是什么?:  「点球大战」是国际足联世界杯在近 40 年来才引进的新赛制,进入淘汰赛阶段,如果双方在正规时间和加时赛打完,还是不分高下,就会进入点球大战一决生死,在这 40 多年来,世界杯总共进行 30 场的点球...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        和欧阳娜娜一起遛玛
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 51吃瓜台北娜娜事件:跨越文化与时空的软文盛宴 :  事件背景 “51吃瓜台北娜娜事件”是指2018年发生在中国内地的一起跨文化事件,事件的核心人物是一名台湾籍女性娜娜。在中国内地的一家51婚介网站上,娜娜作为一名高端伴游,提供陪伴服务。由于娜娜在某次...<br>- 51吃瓜台北娜娜事件:流量巅峰向舆论漩涡的转变 :  台北娜娜事件背景 台北娜娜是51吃瓜平台上的一位知名主播,因其个人魅力和独特的直播风格吸引了大量的粉丝。在一次🤔直播中,娜娜突然宣布离开51吃瓜平台,并📝在社交媒体上发布了一系列关于该平台的不满和抱...<br>- 51吃瓜台北娜娜事件持续发酵,真相迷雾重重,谁是幕后推手 :  社会现象解析 51吃瓜台北娜娜事件的发生和演变,反映了当前网络社会中的一些重要现象。首先是信息爆炸的问题,在信息量巨大的时代,观众更加注重内容的真实性和可信度。其次是网络舆论的力量,观众通过互联网可...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        巴黎圣日耳曼5比4阿森纳
+                        <span class="heat-badge">🔥  88085</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 5-4逆转!巴黎成功卫冕欧冠,阿森纳时隔20年梦碎,无缘首座冠军:  北京时间5月31日凌晨,欧冠决赛开打,巴黎圣日耳曼对阵阿森纳。上半场,哈弗茨闪击破门,帮助阿森纳梦幻开局;下半场,克瓦拉茨赫利亚造点,登贝莱点射破门,帮助巴黎扳平比分;加时赛均未破门,点球大战,巴黎...<br>- 4-5!欧冠决赛神剧情:战至点球大战最后一轮 12.3亿豪门冠军梦碎:  北京时间5月31日凌晨,本赛季欧洲足坛的最后一场重要赛事—欧冠决赛正式上演,卫冕冠军巴黎圣日耳曼对阵阿森纳。 总身价12.1亿欧元的巴黎圣日耳曼已经夺得了法国超级杯、法甲的冠军。半决赛淘汰拜仁后,巴...<br>- 5-4!点球大战决胜负,欧冠冠军诞生:巴黎击败阿森纳,成功卫冕: 点球大战决胜负,欧冠冠军诞生:巴黎击败阿森纳,成功卫冕 欧冠决赛展开争夺,巴黎圣日耳曼对决阿森纳。巴黎圣日耳曼本赛季联赛以76分夺得冠军,比第2名的朗斯多了6分。但是,在法国杯,巴黎圣日耳曼遭遇挫折,...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        阿森纳
+                        <span class="heat-badge">🔥  83568</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 阿森纳与托马斯的法律漩涡:揭开背后的真相与责任 :  在近期的足球圈内,阿森纳与其前球员托马斯之间的法律纠纷引发了广泛的关注与讨论。托马斯因多项强奸和性侵指控被起诉,事件的复杂性以及阿森纳俱乐部在此期间的态度,使得这一事件成为了舆论的焦点。让我们深入剖...<br>- 厄德高伤缺六周,阿森纳如何应对这一危机? : 厄德高伤缺六周,阿森纳如何应对这一危机? 厄德高,这位阿森纳队长,最近因膝盖伤势缺席六周的消息一出,球迷们的心都凉了半截!想想看,阿森纳在这个关键时刻失去一位如此核心的球员,后果可想而知!那么,究竟发...<br>- "我不是来交朋友的,我是来赢的"——阿森纳重建背后的故事: "我不是来交朋友的,我是来赢的"——阿森纳重建背后的故事 “我们刚收养了一只小狗。所以当马克斯(道曼)带球突进的时候,我跳起来把那只狗吓得够呛。它就蹲在我旁边尿了一地,因为我当时对着电视又喊又叫!” ...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        欧冠决赛
+                        <span class="heat-badge">🔥  78850</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 欧冠决赛,巴黎圣日耳曼-阿森纳,前瞻:矛盾之争: 欧冠决赛,巴黎圣日耳曼-阿森纳,前瞻:矛盾之争 赛事 5月31日00:00 新普斯卡什球场 2025/26赛季欧冠决赛 巴黎圣日耳曼-阿森纳 北京时间5月31日00:00,2025/26赛季欧洲俱乐部...<br>- 欧洲冠军联赛决赛:  欧洲冠军联赛决赛(UEFA Champions League final)是由欧洲足球协会联盟主办的单场决胜制足球赛事,每年5月末或6月初在中立场地举行。常规时间打平则进入加时赛,加时赛仍平局则通过...<br>- 1996年欧洲冠军联赛决赛: 1996年欧洲冠军联赛决赛 1996年5月22日,第41届欧洲冠军联赛决赛在罗马奥林匹克体育场举行。尤文图斯与阿贾克斯在120分钟内战成1-1平,拉瓦内利第13分钟为尤文首开纪录,利特马宁第41分钟扳...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        鸟巢偶遇王菲看谢霆锋演唱会
+                        <span class="heat-badge">🔥 演出 77926</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 新浪演唱会热点小时报丨2026年05月30日21时_今日实时演唱会热点速递:  1、王菲现身谢霆锋鸟巢演唱会 #王菲看谢霆锋鸟巢演唱会##王菲去看谢霆锋鸟巢演唱会了#王菲去看谢霆锋鸟巢演唱会了!!...<br>- 炸穿热搜!鸟巢4万人王菲空降谢霆锋演唱会,白T隔空撞衫太好磕: 鸟巢4万人王菲空降谢霆锋演唱会,白T隔空撞衫太好磕 5月30日晚,北京鸟巢彻底沸腾!谢霆锋“进化”巡演北京站开唱,最大彩蛋不是炸裂舞美,而是观众席包厢里低调落座的王菲——素颜白T恤、丸子头,和俞飞鸿、...<br>- 王菲现身谢霆锋鸟巢演唱会,同框俞飞鸿,暗戳戳穿情侣装甜炸了: 王菲现身谢霆锋鸟巢演唱会,同框俞飞鸿,暗戳戳穿情侣装甜炸了 谁能想到啊,5月30号晚上鸟巢直接炸翻了天,谢霆锋的鸟巢演唱会本来就人气拉满,结果观众席里藏着的大惊喜,直接把全网的瓜友们给惊到了! 天后王...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        微信几乎把每个人捆绑在线上
+                        <span class="heat-badge">🔥  77478</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 微信提示音引发集体焦虑:隐形加班侵蚀私人空间:  从前“找不到人”是生活的常态,而如今微信提示音一响,不少人都会本能地心头一紧,“微信几乎把每个人捆绑在线上”正是戳中了这种被全天候在线裹挟的集体情绪。...<br>- 细思极恐!全民被微信线上绑定,如今全国还有人不用微信吗?: 全民被微信线上绑定,如今全国还有人不用微信吗? # 微信几乎把每个人捆绑在线上# 如今行走在大街小巷,无论是老人孩童,还是职场人士,手机里几乎都安装着微信。这款国民社交软件,早已不再只是简单的聊天工具...<br>- 微信之恶:从社交工具到垄断霸权,谁在绑架12亿人的生计与自由?:  一、绑架闭环:从"可选工具"到"生存必需"的强制捆绑 微信的垄断根基,是将自己焊死在普通人的生活、工作与生存链条上,形成"不用即淘汰"的绑架闭环。而这种闭环的形成,并非一蹴而就,而是历经四个阶段的渐...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        网友阻止印度游客在水源区洗澡
+                        <span class="heat-badge">🔥  75590</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 印度游客瀑布洗澡污染水源劝阻无效: 印度游客瀑布洗澡污染水源劝阻无效 2026年5月28日,浙江一瀑布景区饮用水源保护区,网友目击并劝阻几名印度游客使用肥皂洗澡导致水面泛起黄色泡沫,但劝阻无效,事件再次引发公众对水源保护与外籍游客管理的...<br>- 印度游客在神龙谷水源保护区违规洗澡: 印度游客在神龙谷水源保护区违规洗澡 2026年5月28日,浙江丽水遂昌神龙谷景区饮用水源保护区发生一起印度游客违规洗澡事件,目击网友劝阻无效后引发网络热议,这已是类似事件在不到一年内的第二次公开曝光。...<br>- 外籍游客在浙江一景区水源地洗澡?涉事景区辟谣:照片非景区,闭园已超一年: 外籍游客在浙江一景区水源地洗澡?涉事景区辟谣:照片非景区,闭园已超一年 5月30日晚,一则内容为“网友阻止外籍游客在水源区洗澡”的消息登上热搜,引发全网热议。有自媒体博主发文称,5月28日上午,在浙江...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        欧冠裁判
+                        <span class="heat-badge">🔥  66935</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 欧冠决赛裁判希伯特引巨大争议,阿森纳球迷再忆巴黎雨夜之痛:  一、2026年欧冠决赛裁判争议 主裁判身份与背景 德国籍裁判丹尼尔·希伯特(Daniel Siebert)执法本场巴黎圣日耳曼对阵阿森纳的决赛,此前他执法的4场阿森纳欧战比赛中,阿森纳均获胜;执法巴...<br>- 欧冠决赛角球风波:裁判吹停引争议,阿森纳战术被巴黎完美克制: 欧冠决赛角球风波:裁判吹停引争议,阿森纳战术被巴黎完美克制 近期足球赛场上,角球相关的战术价值、裁判争议以及极端数据表现(如全场零角球)成为焦点,尤其在阿森纳与巴黎圣日耳曼的欧冠决赛中引发广泛讨论。 ...<br>- 拜仁出局背后的裁判争议:葡萄牙裁判执法引发的风波 : 拜仁出局背后的裁判争议:葡萄牙裁判执法引发的风波 在刚刚结束的欧冠四分之一决赛中,拜仁慕尼黑意外出局,令人震惊。这场比赛不仅让球迷们感到失望,更是引发了关于裁判判罚的广泛争议。本文将深入分析拜仁的表现...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
