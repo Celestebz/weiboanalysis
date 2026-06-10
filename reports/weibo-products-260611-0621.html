@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-06-11 06:21:12</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0.0</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        好多不是歌手的明星也开演唱会
+                        <span class="heat-badge">🔥 演出 472220</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 谢娜演唱会,引发争议!主办方紧急回应:  6月6日,主持人谢娜在《乘风2026》的直播舞台上突然宣布自己即将开启全国巡演,首站北京。 当晚,谢娜也在其微博上宣布了此事: 因她宣布的时间点和对她唱歌能力的质疑,此举引爆网络,出现了不少对其开演...<br>- 非科班歌手涌入演唱会市场: 非科班歌手涌入演唱会市场 谢娜、赵露思之后,白鹿也要开演唱会了?白鹿演唱会官宣后,站内热度一路飙升至第二位,截至发稿前,票务平台上“想看”人数已突破20万,成为2026年上半年演出市场最具话题性的跨界...<br>- 网友质疑谢娜开演唱会资格的法规依据是什么?: 网友质疑谢娜开演唱会资格的法规依据是什么? 一、质疑的起点:专业身份与市场准入的冲突 2026年4月,谢娜在《乘风2026》直播中宣布举办个人演唱会,随后又官宣全国巡演。由于她以主持人身份闻名,并非职...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        高考结束的第一批受害者出现了
+                        <span class="heat-badge">🔥  288571</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 回顾:2022年高考601分少女高调庆祝,遭嫉妒被杀,凶手竟是亲人: 回顾:2022年高考601分少女高调庆祝,遭嫉妒被杀,凶手竟是亲人 2022年7月4日,新安县警方通报了一起命案,死者正是刚刚高考结束的冯月(化名),大家都在为冯月去世感到惋惜。 冯月的街坊邻居都想不...<br>- 衡水一中学伤害事件的背后,是校园暴力还是学业压力的无处释放?: 可是近日,衡水一中学两名考生在高考结束之后,因发生争执,结果导致一名学生被捅死,真是让人感觉痛心。 从网上曝光的视频中可以看出,学校周围已经围观了很多人,保安也在现场维持,一学生躺在地上一动不动,而一...<br>- 河南一女生高考结束后被杀害,凶手系同村村民,父母长期在外打工: 河南一女生高考结束后被杀害,凶手系同村村民,父母长期在外打工 六月七号高考连续考两天半,一般到中下旬出成绩,按理说许多有梦想的才子才女终于等到了自己榜上提名的机会,接下来只有到新的学校不断发展。然而河...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        中式主题乐园能有多出圈
+                        <span class="heat-badge">🔥  218387</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 中式主题乐园重塑文旅赛道: 中式主题乐园重塑文旅赛道 记者近日实地探访“只有河南·戏剧幻城”、清明上河园等沉浸式文旅项目,发现年轻游客逐渐青睐兼具文化底蕴、沉浸体验与情感共鸣的本土文旅业态。依托实景演绎、NPC(非玩家角色)互动...<br>- 3年15倍!中式主题乐园爆火,“沉浸感”成为新流量密码: 中式主题乐园爆火,“沉浸感”成为新流量密码 没有迪士尼的梦幻城堡,也没有环球影城的特效魔法,扎根本土文脉、展现东方美学、呈现潮玩新叙事等的中式主题乐园悄然崛起,成为文旅市场的一匹黑马。 近日,证券时报...<br>- 让快乐变现!“沉浸感”成为新流量密码!中式主题乐园火爆出圈: 中式主题乐园火爆出圈 (原标题:沉浸体验+情绪消费重塑文旅格局 中式主题乐园火出圈) 证监会主席吴清表示,要在“十五五”时期进一步科学谋划、研究推出更多深化包容性改革、推动资本市场高质量发展的具体举措...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        世界杯开幕喜剧上映 看球喝蒙牛
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 蒙牛“看球喝蒙牛”的营销策略,具体是如何绑定观赛场景和影响消费者习惯的?:  蒙牛通过情感共鸣、全民福利、场景渗透与长期主义的组合拳,将“看球喝蒙牛”从一句口号转化为球迷的观赛习惯,成功把品牌嵌入世界杯的每一个激动瞬间。 一、情感共振:用青春记忆绑定观赛场景 蒙牛通过怀旧微电...<br>- 蒙牛乳业 :  距2026FIFA世界杯开幕倒计时 3 天! 全院集结,专治不开心 🥛⚽ 这个夏天,“球治百病治愈院”即将营业 三位快乐疗愈师正式就位: 🎙️看球不慌再创辉「黄院长」 @黄健翔 ⚽️看球要有「范老师...<br>- 蒙牛推世界杯爆笑喜剧,由杨紫+范志毅主演: 预告蒙牛首部世界杯爆笑喜剧 由范志毅、杨紫领衔主演 短片将于11日上线 同日,蒙牛还发布与国际武术联合会iwuf 共同打造的《你好世界杯,看我功夫牛》预告片 今年世界杯营销看来是要「卷」上天了!...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        肥胖标准的重要更新
+                        <span class="heat-badge">🔥  97865</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- ADA首部《超重与肥胖诊疗标准》重磅发布!亚裔超重BMI切点下调至23,引入“腰高比” : ADA首部《超重与肥胖诊疗标准》重磅发布!亚裔超重BMI切点下调至23,引入“腰高比” 导读 在过往的医学认知中,肥胖往往被习惯性地视作如糖尿病等慢病的“附属品”或“前奏”。然而,在第86届美国糖尿病...<br>- 深度解读《2025年超重和肥胖诊疗标准》:核心要点与中国防治启示:  一、标准更新:肥胖患病率与认知改变 陆迪菲教授: 新标准主要有两方面更新[1,2]:一是“引言”部分,二是“体重污名化与偏见”部分。主要表现在: 数据更新:肥胖率持续攀升 核心要点中,患病率有新的更...<br>- 《健康山东行动—健康体重管理行动实施方案(2025年-2030年)》政策解读:  一、出台背景 随着经济社会的发展,以及居民生产生活方式、饮食结构的变化,全省居民健康状况在得到持续改善的同时,超重和肥胖问题日益突出。研究表明,体重水平与人体健康状况密切相关,体重异常特别是超重和肥...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        李昀锐邢武趁机索吻
+                        <span class="heat-badge">🔥 剧集 69942</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 这次机场认亲事件对李昀锐的公众形象有什么影响?:  一、事件本质:打破人设壁垒的"高光时刻" 自然流露的亲和力 面对两名湖北籍粉丝隔着自身攀谈认亲的突发状况,李昀锐以退后一步、幽默调侃"那你俩先聊会儿"并持小旗半遮面的反应,消解了明星与粉丝间的仪式化...<br>- 甜爆!吻戏路透炸场:关晓彤踮脚亲、李昀锐托脸回应 浪漫如油画:  一、核心事件:《耀眼》吻戏路透引热议 2025年7月14日,关晓彤与李昀锐在威海拍摄电视剧《耀眼》时,一组海边吻戏路透引发关注。画面中,关晓彤(饰“晴也”)身着白裙踮脚亲吻李昀锐(饰“邢武”),男方...<br>- 李昀锐背心戏引发腋下管理热议|邢武|奔跑吧|耀眼|自律|话题_新浪新闻:  三、关联作品与人物背景 热播剧《耀眼》表现:该剧由李昀锐与关晓彤主演,其饰演的金发角色邢武以“事事没回应件件有着落”的细腻人设获赞。剧集开播首日收视登顶卫视第一,腋下管理话题与剧中肌肉线条特写形成角...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        山姆打包哥已被行拘
+                        <span class="heat-badge">🔥  69876</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 重庆通报“山姆打包哥”被指虐狗:李某(男,39岁)已被立案,其家中三条小狗已送医 :  近日,重庆两江新区男子李某,绰号“山姆打包哥”,被曝长期以领养名义骗取猫狗后实施残忍虐待,致多只动物死亡并抛尸,事件引发全网震怒与广泛关注。截至 6 月 9 日,当地警方已介入调查,相关情况仍在进一...<br>- 重庆通报“山姆打包哥”虐待猫狗事件 : 重庆通报“山姆打包哥”虐待猫狗事件 据大河报9日报道,近日,网传重庆一名被称为“山姆打包哥”的男子,与其妻子涉嫌长期以“领养”为名骗取猫狗后残忍虐待,引发了广泛关注。 图源:大河报 6月9日,重庆市两...<br>- 山姆配送员竟是逃犯?送货途中被南京警方抓获: 山姆配送员竟是逃犯?送货途中被南京警方抓获 今天 事发南京的一条微博热搜引起网友热议: 山姆配送员竟是“三逃”逃犯? 这究竟是怎么回事? “骑车要守法依规, 注意观察,我把这起事故画给你们看, 各自责...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        京东健康618 赵奕欢送百万免单
+                        <span class="heat-badge">🔥  </span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 京东健康618:全场景AI守护全民健康,百万份全额免单等你来抢!: 京东健康618:全场景AI守护全民健康,百万份全额免单等你来抢! 5月18日,京东宣布,又好又便宜的京东618将于5月30日晚8点正式开启,全品类现货开卖,汇集全球甄选好物、海量“特惠爆款”、新奇特好...<br>- 京东健康618全品类爆发:健康免单活动百万用户参与、多个品类十倍增长: 京东健康618全品类爆发:健康免单活动百万用户参与、多个品类十倍增长 5月30日晚8点,又好又便宜的京东618正式开启,健康消费热潮全面迸发。依托 “AI+供应链”核心优势,京东健康聚焦看病购药等民生...<br>- 京东 618 “健康免单” 惊喜连连,网友惊叹中奖率逆天: 京东618 “健康免单” 惊喜连连,网友惊叹中奖率逆天 王阿姨是个精打细算的网购达人,平时家里的生活用品、常用药品基本都在网上采购。最近,王阿姨在京东健康给老伴买药时,偶然参与了“健康免单”活动。让她...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        养了一只配得感很低的小猫
+                        <span class="heat-badge">🔥  69316</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 养一只小猫: 在生活,工作和学习中,许多人都有过写《养一只小猫》作文的经历,对《养一只小猫》作文都不陌生吧,借助作文人们可以实现文化交流的目的.那要怎么写好《养一只小猫》作文呢?下面是小编收集整理的《养一只小猫》,...<br>- 我家养猫的经历与故事: 我老爸爱养鸽子,都养在天台上,刚开始老鼠遍地都是.倒不是老鼠要吃鸽子(如果哪只傻老鼠敢对某只鸽子进攻,鸽子群还把它吃了呢!),而是那些老鼠对那些喂养鸽子的饲料感兴趣.这可愁坏了老爸,他老鼠笼用过了,老...<br>- 我与流浪猫的不解之缘: 以下是小编为大家收集的《我与流浪猫的不解之缘》作文,希望在写《我与流浪猫的不解之缘》上能够帮助到大家,让大家都能写好《我与流浪猫的不解之缘》作文 我家收养了一只可爱的猫,它就是从街上捡来的,我非常喜欢...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        最节俭的人投胎到我家了
+                        <span class="heat-badge">🔥  55978</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 昭和之耻之人妻妾的背景故事亲身经历后才明白,那些年忍辱负重的日子刻骨铭心,表面风光背后全是算计和眼泪,千万别让欲望毁掉你的一生清白-一法网: 国台办:欢迎台湾同胞跨海相聚,共叙情谊共享机遇引言在昭和时代的日本,家庭结构与社会价值观发生了深刻变化。传统的“妻妾”制度虽已逐渐淡化,但在许多地区仍有存在的余波。近日,一位年近八旬的老年妇女以亲笔信...<br>- 中文字幕一区二区三区四虎在线资源安全观看,网络环境复杂风险多,信息泄露财产损失隐患大,选择正规平台保护隐私最重要-个人作品展示: 2026-06-11 04:49:49 768551次浏览 近年来,全球半导体供应链频繁出现波动,给各国制造业和科技产业带来严峻挑战。近日,欧盟委员会贸易与经济安全委员谢夫乔维奇在个人社交媒体上发布关...<br>- 民间故事:两兄弟投胎转世,贫富差距明显,判官:一个真来一个假:  唐朝天宝年间,有一户姓田的大户人家,家里有两兄弟。两兄弟长大后,各自分家单过,一家住在村东头,一家住在村西头。大郎娶妻杨氏,二郎娶妻柳氏,兄弟两人都生了三儿两女。因为祖传家产丰厚,两家都不愁吃穿。 ...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        千万别让冰箱贴毁了你的冰箱
+                        <span class="heat-badge">🔥  49480</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 冰箱贴会把冰箱门压坏?并不会,但有一种贴法真的伤冰箱: 冰箱贴会把冰箱门压坏?并不会,但有一种贴法真的伤冰箱 前段时间一条微博内容引起了大家的热烈讨论,说的是“冰箱贴要经常挪一挪位置”。 “冰箱贴要挪位置”引起热议,图片截取自网络 在讨论过程中,有些人提到...<br>- 冰箱贴一直不挪,居然会偷偷伤害冰箱: 冰箱贴一直不挪,居然会偷偷伤害冰箱 千姿百态的冰箱贴,早已成为点缀生活的小能手。但你可能没意识到,这些牢牢粘在冰箱门上的小物件,若长期固定在同一位置,正悄悄给冰箱带来隐形伤害。 从材料学角度来看,冰箱...<br>- 网传冰箱贴一直不挪会伤害冰箱,有科学依据吗?冰箱贴到底该怎么贴?: 网传冰箱贴一直不挪会伤害冰箱,有科学依据吗?冰箱贴到底该怎么贴? 近期网络流传“冰箱贴一直不挪会伤害冰箱”的说法,引用了多项理由试图证明其危害性。然而,经过对相关科学原理及引用文献的深入分析,发现该说...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        于娜首次公开丈夫去世细节
+                        <span class="heat-badge">🔥 综艺 47302</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 最新| 知名女演员自曝丈夫去世细节!崩溃大哭!自己得了这种病......:  于娜首次公开丈夫去世细节 冲上微博热搜 引发网友热议 网友评论 2026年6月10日,45岁的于娜在综艺节目《21天重样自己》中首次公开谈及丈夫离世细节。她透露与小12岁的丈夫于2021年闪婚,但对...<br>- 45 岁于娜隐婚丧夫,四处借钱,丈夫是音乐人长相普通,死因曝光,远比我们想象的更心酸:  近期,沉寂十年的于娜罕见亮相综艺《21天重养自己》,久违露面的她,首度袒露心声,曝光了自己隐婚丧夫的全部细节,也揭开了自己消失十年背后,最心酸的真相。 在这期节目里,节目组设置了一个温情环节:嘉宾描...<br>- #于娜首次公开丈夫去世细节#:  #于娜首次公开丈夫去世细节#芒果 TV《21 天重养自己》的录制现场,于娜坐在屏幕前,指尖轻触 AI 画像生成的按钮。当屏幕上逐渐浮现出一个眉眼温和、笑容熟悉的男人轮廓时,她的身体骤然僵住,眼泪毫无...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        央视曝光色情漫画陷阱
+                        <span class="heat-badge">🔥  47075</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 重拳出击!#央视曝光色情漫画网站黑链条#... 来自央视频 - 微博:  【重拳出击!#央视曝光色情漫画网站黑链条#】淫秽色情信息不仅污染了网络环境,对思想还没成熟的未成年人更是巨大的威胁。除了境外流入的视频、文字、图片等淫秽色情信息,孩子们看的漫画竟也成为不法分子下手的...<br>- 央视曝光网络低俗动漫 B站回应:展开全面清查:  前日晚,央视新闻频道以“拒绝网络低俗动漫!”为题,点名批评了B站以及其他网站、APP的低俗动漫内容,称有一些动漫甚至涉及“兄妹恋”等乱伦内容。 为了给孩子们的暑假营造一个健康清朗的网络视听环境,国家...<br>- 央视点名B站动漫低俗:平台自查有漏洞,ACG内容审查难题怎么破:  7月20日,央视曝网络低俗动漫,点名批评B站动漫内容低俗,有涉兄妹乱伦内容。在长达6分多钟的报道中,央视对哔哩哔哩以及部分漫画网站进行考察批评,新闻画面中出现的《任性HighSpec》《腹黑妹妹控兄...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        谢娜演唱会被抵制的原因
+                        <span class="heat-badge">🔥 演出 47073</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 谢娜演唱会升级巡演引舆论抵制:  谢娜因一个月内将成都“圆梦”演唱会急速升级为票价380-1180元的全国巡演,并涉嫌在综艺节目中公器私用进行宣传,从而遭遇大规模舆论抵制。 一、核心导火索:从“圆梦”到“巡演”的叙事急转 谢娜演唱会...<br>- 犯众怒了?谢娜开演唱会被抵制,各地文旅被网友留言沦陷!:  2026 年 6 月 6 日,谢娜正式官宣《快乐万岁・我们的青春》全国巡回演唱会筹备计划,本想借着情怀收割一波关注度,没想到官宣消息放出之后,非但没有收获大批歌迷期待,反倒迎来全网大规模抵制,大量网...<br>- 谢娜演唱会被抵制的原因:国民好感耗尽,这次观众不再买账: 谢娜演唱会被抵制的原因:国民好感耗尽,这次观众不再买账 谁也没想到,一向靠国民度出圈的谢娜,会在演唱会这件事上彻底翻车。 近期谢娜官宣个人全国巡回演唱会,本是一场看似圆梦的个人舞台,却在短短48小时内...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        央视曝光街边免费领东西骗局
+                        <span class="heat-badge">🔥  46751</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 老人免费领鸡蛋,骗局大揭秘!一定要转发给爸妈看!: 老人免费领鸡蛋,骗局大揭秘!一定要转发给爸妈看! 白话财经。 你们那帮打着免费领鸡蛋的幌子去骗老人家养老钱的东西简直就是丧尽天良。年轻朋友一定要跟你爸妈讲所有免费领鸡蛋的活动全是骗局。今天我就把这帮骗...<br>- 转给爸妈!七旬老太拿身份证领免费鸡蛋后被诉 专坑老年人的几大骗局→: 七旬老太拿身份证领免费鸡蛋后被诉 专坑老年人的几大骗局→ 今天 #75岁老太拿身份证领免费鸡蛋后被诉# 登上了热搜 这究竟是怎么一回事? 75岁的张彩凤近日 在菜市场买菜付款时 却发现无法支付 银行卡...<br>- 村里来人了,扫码领礼品? : 村里来人了,扫码领礼品? “扫一扫,免费领礼品!” 相信有不少人都曾在商超入口、街头巷尾被 这类推销活动吸引。 然而,这种看似“天上掉馅饼”的好事, 背后可能暗藏猫腻。 四川乐山公安网安部门查处一起 ...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
