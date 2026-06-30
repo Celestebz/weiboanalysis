@@ -1,0 +1,1232 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜产品创意分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+            padding: 40px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, #fff, #dadada);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hot-topic {
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+        }
+
+        .hot-topic.excellent {
+            border-left: 6px solid var(--accent);
+        }
+
+        .topic-header {
+            padding: 30px;
+            background: rgba(248, 250, 252, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topic-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            background: var(--text-main);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .heat-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .topic-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .topic-body { grid-template-columns: 1fr; }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .background-content {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--secondary);
+            z-index: 10;
+        }
+
+        .score-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        
+        .score-ribbon.excellent { background: var(--accent); }
+        
+        .score-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #b45309 transparent transparent transparent;
+        }
+        .score-ribbon.excellent::after { border-top-color: #b45309; }
+
+        .product-header h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            list-style: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .meta-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微博热搜创意洞察</h1>
+            <div class="subtitle">Daily Product Insights & Analysis</div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">2026-07-01 05:47:10</div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="number">15</div>
+                <div class="label">Total Topics</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0</div>
+                <div class="label">Top Ideas (80+)</div>
+            </div>
+            <div class="summary-card">
+                <div class="number">0.0</div>
+                <div class="label">Avg Score</div>
+            </div>
+        </div>
+
+        
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">1</span>
+                        哈兰德绝杀破门
+                        <span class="heat-badge">🔥  961025</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 哈兰德在这场淘汰赛有取得进球吗:  哈兰德在2026年世界杯1/16决赛挪威对阵科特迪瓦的淘汰赛中打入制胜进球,帮助球队1-0取胜晋级,完成了个人世界杯淘汰赛首秀破门。 一、比赛背景:挪威时隔28年重返淘汰赛 2026年美加墨世界杯1...<br>- 哈兰德这次进球是他世界杯淘汰赛首球吗?:  二、绝杀进球全过程 僵局与扳平:上半场第39分钟努萨内切世界波为挪威首开纪录;下半场第74分钟,科特迪瓦替补上场的阿马德·迪亚洛一条龙破门扳平比分。 绝杀时刻:第86分钟,帕特里克·贝格右路插上接鲍...<br>- 哈兰德86分钟绝杀!挪威夺世界杯淘汰赛首胜: 哈兰德86分钟绝杀!挪威夺世界杯淘汰赛首胜 2026年7月1日凌晨,挪威在美加墨世界杯1/16决赛中以2-1击败科特迪瓦,拿下队史88年世界杯淘汰赛首胜,哈兰德第86分钟绝杀建功。 一、历史性突破的背...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">2</span>
+                        法国vs瑞典
+                        <span class="heat-badge">🔥  372195</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 世界杯1/16决赛:法国VS瑞典——高卢雄鸡撞上北欧海盗的复活剧本:  一、比赛背景:强弱分明,但故事线拉满 法国这边,德尚带着这群人踢他自己最后一届世界杯,全队战意不用怀疑——小组赛3-1塞内加尔、3-0伊拉克、4-1挪威,10个进球分布均匀,姆巴佩3场4球2助已经把...<br>- FIFA展望法国vs瑞典:一场迟到96年的猫鼠游戏: FIFA展望法国vs瑞典:一场迟到96年的猫鼠游戏 雷速体育6月30日讯 北京时间7月1日5时,法国将在美加墨世界杯1/16决赛迎战瑞典。赛前,FIFA官网展望了这场较量,将其称为“一场酝酿了96年的...<br>- 078世界杯1/16决赛!法国VS瑞典,高卢雄鸡能否取胜晋级下一轮?:  赛事推荐:法国VS瑞典:八维度全拆解 (双方综合实力对比图) 维度一:赛事背景与综合实力 本场为2026美加墨世界杯1/16决赛,单场定生死,90分钟战平将进入加时赛乃至点球大战,输球直接止步本届世...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">3</span>
+                        7月起一批重要法律法规将施行
+                        <span class="heat-badge">🔥  182555</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 跟你我有关!7月1日起一批新规即将落地: 7月1日起一批新规即将落地 央视网消息:7月将至,一批与你我生活息息相关的新规即将落地。一起梳理。 新修订行政复议法实施条例7月施行 新修订的《中华人民共和国行政复议法实施条例》于7月1日起施行。对闯...<br>- 7月起一批新规施行 与你我生活息息相关: 7月起一批新规施行 与你我生活息息相关 7月将至,一批与你我生活息息相关的新规即将落地。 对外投资领域的首部行政法规施行 7月1日起,我国对外投资领域的首部行政法规——《国务院关于对外投资的规定》将正...<br>- 7月起,这些新规将影响你我生活:   新修订的《中华人民共和国行政复议法实施条例》近日公布,于今年7月1日起施行。对闯红灯被罚、开店被吊销执照、工伤不认定等政府部门的行政行为有异议的,可以通过行政复议来解决争议。此次新修订的实施条例补...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">4</span>
+                        詹姆斯确定离开湖人
+                        <span class="heat-badge">🔥  149688</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 詹姆斯拒绝会面湖人,正式宣布离队: 詹姆斯拒绝会面湖人,正式宣布离队 根据名记Brian Windhorst和Shams等权威媒体的连续报道,勒布朗·詹姆斯在2026年自由球员市场开启后迟迟未安排与湖人队会面,反而在家乡阿克伦打高尔夫,...<br>- 詹姆斯确定离开湖人!三大热门下家出炉: 詹姆斯确定离开湖人!三大热门下家出炉 勒布朗·詹姆斯在2026年7月1日自由市场开启前,已正式通知湖人将离队,结束8年紫金生涯,继续征战2026-27赛季。 一、核心事实与官方确认 离队决定:詹姆斯告...<br>- 詹姆斯离开湖人的具体原因是什么?:  一、核心事实:詹姆斯确认将离开湖人 詹姆斯通过经纪人里奇·保罗告知湖人管理层,自己将出战2026-27赛季,但不会再为湖人效力,球队可以无需围绕他建队。 詹姆斯选择在自由球员市场开启前(7月1日)提...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">5</span>
+                        张凌赫我连心疼你都有时差
+                        <span class="heat-badge">🔥 综艺 118077</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 张凌赫的个人资料和代表作品有哪些?:  一、事件引入:何炅打断沈梦辰张凌赫握手 在2026年6月30日播出的《我们的宿舍》中,沈梦辰见到飞行嘉宾张凌赫后,主动上前提礼物、握手,却因过于激动紧握不放,被网友形容为“手像沾了胶水一样”。何炅在...<br>- 张凌赫素人走红把经纪公司邀约全当骗子拒了: 张凌赫素人走红把经纪公司邀约全当骗子拒了 张凌赫近日在综艺《我们的宿舍》中自曝,素人时期因抖音视频走红被大批经纪公司私信联系,他却一度把邀约全当“骗子”处理掉了。 一、事件由来与“防骗”警觉 张凌赫大...<br>- 张凌赫自爆身体状况,粉丝心疼连心疼都有时差:  这句话的来龙去脉 “连心疼你都有时差”的说法早在2026年3月就开始在粉丝圈流传,真正大规模引爆是在2026年6月30日《我们的宿舍》相关话题发酵后。 物理时差层面:粉丝与在北京或纽约的他存在真实时...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">6</span>
+                        大爷静脉曲张十几年取出40厘米血栓
+                        <span class="heat-badge">🔥  116981</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 北京退休大爷静脉曲张取出40厘米血栓 拖治真的会致命?完整版解读: 北京退休大爷静脉曲张取出40厘米血栓 拖治真的会致命?完整版解读 静脉曲张拖久了一定会长出血栓吗?从北京大爷40厘米血栓病例说清风险 2026年6月,北京一位患下肢静脉曲张十余年的大爷就医后,医生从其...<br>- 大爷拖了十几年静脉曲张,竟取出40厘米血栓: 大爷拖了十几年静脉曲张,竟取出40厘米血栓 北京一位患下肢静脉曲张十余年的大爷因未重视治疗,腿部血管内形成一条长达40厘米的完整血栓,医生手术取出时发现血栓已出现脱落迹象,若不及时处理随时可能引发致命...<br>- 40厘米长血栓取出后大爷目前身体如何:  2026年6月30日,北京一位患静脉曲张十几年的大爷通过微创手术成功取出一条长达40厘米的暗红色血栓,目前术后已脱离生命危险,腿部疼痛明显缓解,正在接受后续康复治疗。 一、事件回顾:从忽视到危机 这...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">7</span>
+                        詹姆斯
+                        <span class="heat-badge">🔥  103189</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 詹姆斯那记钉板大帽是怎么发生的?: 詹姆斯那记钉板大帽是怎么发生的? 2016年总决赛抢七最后1分50秒,勒布朗·詹姆斯从三分线外全速回追,在伊戈达拉上篮出手的瞬间,将球死死按在篮板上,完成了NBA历史上最著名的防守——世纪追帽(The...<br>- 詹姆斯世纪追帽那球走步了吗?:  2016年总决赛抢七詹姆斯对伊戈达拉的那记“世纪追帽”,在慢镜头下并未出现多走一步的违规动作,是一次完全合法的封盖,走步争议主要源于詹姆斯职业生涯中频繁被讨论的走步习惯以及部分球迷对关键回合的过度解...<br>- 詹姆斯临场发言致湖人解约!背后真相令人震惊 : 然而,最近发生的一件事,却让人不禁想问:一位球员的临场发言,竟然能在短短48小时内导致与球队解约?这不是电影情节,而是现实中发生的故事。到底发生了什么?让我们来详细解读一下这场风波的来龙去脉。 202...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">8</span>
+                        挪威门将立大功
+                        <span class="heat-badge">🔥  98284</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 挪威门将爆火!一人扛全队看哭打工人:  挪威国家队门将阵容在2026年世界杯期间因替补门将塞尔维克在对阵法国队时独自扛住狂轰滥炸而成为网络热议焦点,同时队内还并存着尼兰德、塞尔维克、唐维克三位正选门将以及一段跨越32年的门将父子传承故事。...<br>- 哈兰德偷喝门迪水瓶反问喝不喝:  6月23日,世界杯小组赛第二轮挪威vs塞内加尔,球迷在场边目击挪威名将哈兰德在场边偷喝塞内加尔门将的水详情 来自微博1.8万人讨论阅读7778.7万 2026年世界杯小组赛挪威对阵塞内加尔时,哈兰德...<br>- 压力大就看看挪威门将,这梗为啥火了:  “觉得压力大的可以看看挪威门将”这句话在2026年6月27日挪威对阵法国的世界杯小组赛期间成为热门话题——挪威队在这场比赛中轮换了包括哈兰德、厄德高在内的10名主力,门将塞尔维克顶住法国队的猛烈攻势...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">9</span>
+                        暑假工才是真正的315
+                        <span class="heat-badge">🔥  88817</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 监管部门会针对这次爆料开展专项检查吗:  一、事件背景:暑假工成为“民间最强打假人” 1. 爆发的规模和内容 2026年6月30日起,#暑假工才是真正的315#话题持续登上微博热搜,相关阅读量数亿。 学生们以“行业卧底”身份发布后厨视频、图...<br>- 这次曝光会推动行业整改吗?:  2026年夏天,“暑假工才是真正的315”这一话题引爆全网,大量学生兼职时无意间曝光餐饮后厨卫生、过期食材、原料造假等行业内幕,形成了一场持续整个暑期的“民间打假”浪潮,引发了公众对监管效力和行业自...<br>- 被曝光的涉事商家会被相关部门处罚吗:  2026年暑假,“暑假工才是真正的315”话题引爆网络,大量学生兼职曝光餐饮后厨乱象,舆论聚焦涉事商家是否会被处罚,而过往案例表明,此类曝光一旦经官方核实,涉事企业面临罚款、吊销许可乃至注销等严厉处...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">10</span>
+                        哈兰德头球
+                        <span class="heat-badge">🔥  77488</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 2026世界杯1/16决赛挪威科特迪瓦 哈兰德为何头球回解围?:  2026年7月1日,2026世界杯1/16决赛挪威对阵科特迪瓦的淘汰赛中,身价1.5亿欧的挪威头号射手埃尔林·哈兰德打出了极具戏剧性的全场表现:进攻端上半场仅有的2次射门全部来自他的头球,开场仅3分...<br>- 哈兰德姆巴佩都没进过直接任意球,太巧合!: 哈兰德姆巴佩都没进过直接任意球,太巧合! 2026年世界杯I组末轮,挪威主帅索尔巴肯大轮换雪藏哈兰德,让万众期待的“新绝代双骄”首场世界杯正面对决变成姆巴佩独挑大梁的独角戏;而同样令外界惊叹的是,这两...<br>- 哈兰德加布里埃尔为何结下长期梁子?:  一、冲突事件的演变脉络 1. 早期摩擦:用球砸头事件 2024年10月,曼城对阵阿森纳的比赛中,哈兰德进球后玩笑式地用球砸向加布里埃尔的后脑勺,引发双方第一波舆论热议。 哈兰德在挪威国家队发布会回应...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">11</span>
+                        医院护工九年劝你别太心疼爹妈
+                        <span class="heat-badge">🔥  76632</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 大众对护工职业的误解该怎么消除?:  消除对护工职业的误解,核心在于撕掉“伺候人”“没技术”“不可靠”的标签,正视其作为医疗体系中不可或缺的专业角色与真实困境。 一、误读的根源:偏见源于信息不对称与极端案例放大 大众对护工的误解,往往来...<br>- 我伺候父亲整整 9 年,他天天夸二哥好,年初二,我把父亲送到了二哥家!:  创作声明:本文为虚构创作,请勿与现实关联,本文所用素材源于互联网,部分图片非真实图像,人名均为化名,仅用于叙事呈现,请知悉。 原来这世上最深的爱,是把自己活成一座孤岛。我伺候瘫痪父亲9年,擦身换药照...<br>- 过度照顾父母真的会加速失能吗?:  一、现象:护士床上护工9年直言“别太心疼爹妈” 一位自称在医院工作九年的护工,其“劝你别太心疼爹妈”的言论在网络上引发了广泛共鸣与讨论。 这句话乍一听显得刺耳甚至冷血,但结合其九年的病房见闻,这被认...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">12</span>
+                        科特迪瓦1比2挪威
+                        <span class="heat-badge">🔥  67559</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">13</span>
+                        德国队多个球星不敢罚点球
+                        <span class="heat-badge">🔥  64527</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 2026世界杯1/16决赛德国队为什么不让造点的人罚点球: 2026世界杯1/16决赛德国队为什么不让造点的人罚点球 德国队为什么不让造点的人罚点球?点球3-4巴拉圭爆冷出局深度复盘 2026年6月30日美加墨世界杯1/16决赛,德国队常规时间+加时1-1战平...<br>- 德国队出局和争议判罚有直接关系吗:  德国队在2026年世界杯1/16决赛中点球大战不敌巴拉圭出局,加时赛第102分钟塔的头球绝杀因VAR判定队友犯规在先被取消,这一争议判罚成为直接导火索,但球队点球大战时多名球员临阵退缩、无人敢罚的崩...<br>- 点球大战多名球星退缩,德国队金身告破出局:  2026年世界杯1/16决赛,德国队在点球大战中爆冷被巴拉圭淘汰,更令人震惊的是在“突然死亡”轮次多名球星犹豫退缩、不敢主罚,最终由生涯从未罚过点球的中后卫若纳坦·塔背锅射失,终结了德国队世界杯点球...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">14</span>
+                        姆巴佩单刀进球被吹
+                        <span class="heat-badge">🔥  62942</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 深度解析:内马尔世纪助攻姆巴佩完整事件始末:  内马尔对阵特鲁瓦的一记神级脚后跟传球被球迷称作「世纪助攻」,这记难度拉满的艺术传球最终因姆巴佩错失单刀成为足坛最具遗憾的名场面,以下是完整事件梳理与细节解析。 比赛基础信息 赛事:2022-23赛季...<br>- 新浪英格兰足球热点小时报丨2026年06月28日20时_今日实时英格兰足球热点速递:  2、凯恩破纪录英格兰2-0胜,贝林厄姆首开纪录 新泽西暴雨滂沱,高温肆虐,却挡不住三狮军团疯狂的进攻火焰!比赛第62分钟,大英帝皇祖德·贝林厄姆,一记精准的炮击,率先打破了比分僵局!进球后的喜悦,如...<br>- 皇马球员姆巴佩被吹掉的进球是因为什么原因被判越位无效?: 皇马球员姆巴佩被吹掉的进球是因为什么原因被判越位无效? 在皇家马德里客场对阵奥萨苏纳的西甲焦点战中,姆巴佩曾攻入一记看似扳平比分的进球,却被裁判判定越位无效,这一毫米级的判罚瞬间点燃了全球球迷关于VA...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hot-topic ">
+                <div class="topic-header">
+                    <div class="topic-title">
+                        <span class="rank-badge">15</span>
+                        多囊卵巢综合征正式更名
+                        <span class="heat-badge">🔥  52242</span>
+                    </div>
+                </div>
+
+                <div class="topic-body">
+                    <div class="topic-left">
+                        <div class="section">
+                            <h3 class="section-title">📌 事件背景</h3>
+                            <div class="background-content">
+                                <br><br>参考信息:<br>- 《柳叶刀》官宣:“多囊卵巢综合征”正式更名!: 《柳叶刀》官宣:“多囊卵巢综合征”正式更名! 如果你或者身边的朋友长期被月经不调、顽固痘痘、突然发胖甚至备孕困难所困扰,大概率听过甚至被诊断过一种疾病——多囊卵巢综合征(PCOS)。 但今天,我们要告...<br>- PCOS更名引发争议:过半数中国专家持反对意见!| 2026ENDO :  2026年5月,由澳大利亚莫纳什大学、英国患者倡导组织Verity以及国际雄激素过多症与PCOS学会牵头的全球联盟在《柳叶刀》(The Lancet)发表共识文件,正式提出将“多囊卵巢综合征”(PC...<br>- 「技精医湛」多囊正式更名为 PMOS:内分泌科全方位综合管理: 「技精医湛」多囊正式更名为 PMOS:内分泌科全方位综合管理 本期专家:北京中医药大学第二临床医学院(东方医院)内分泌科 主治医师 杨泽佩 不少女性听到“多囊”心存顾虑,这类问题引发月经紊乱、反复长痘...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="topic-right">
+                        <h3 class="section-title">💡 创意方案</h3>
+                        <div class="product-ideas">
+            
+                            <div class="product-card">
+                                <div class="score-ribbon good">
+                                    0分
+                                </div>
+                                <div class="product-header">
+                                    <h3>分析出错</h3>
+                                </div>
+
+                                <div class="product-section">
+                                    <ul class="feature-list"></ul>
+                                </div>
+
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <div class="meta-label">目标用户</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">产品形态</div>
+                                        <div class="meta-value">无</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有趣度</div>
+                                        <div class="meta-value" style="color:var(--secondary)">0/80</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-label">有用度</div>
+                                        <div class="meta-value" style="color:var(--success)">0/20</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            Generated by Claude Agent • Data Source: https://apis.tianapi.com/weibohot/index?key=ab1cca5ccb089e4bed812457b6b1155a
+        </div>
+    </div>
+</body>
+</html>
+        
